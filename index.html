@@ -84,6 +84,8 @@ h1{
 }
 @media(max-width:700px){.ipa-badge{width:100%;min-height:44px}}
 
+
+.external-only-note{font-size:12px;opacity:.7;text-align:center;margin-top:8px}
 </style>
 </head>
 <body>
@@ -113,7 +115,7 @@ h1{
 </section>
 
 <section id="levelScreen" class="card hidden">
-<div style="margin-bottom:12px"><button class="secondary" onclick="show('modeScreen')">← MODES</button></div>
+<div style="margin-bottom:12px"><button class="secondary" onclick="show('levelScreen')">← LEVELS</button></div>
     <div class="topbar">
       <div><h2 id="welcomeName"></h2><div class="small">Choose your level.</div></div>
       <button class="secondary" onclick="logoutStudent()">LOG OUT</button>
@@ -201,7 +203,13 @@ h1{
 <script>
 const WORDS = {"B2": ["absorb", "abstract", "accent", "accidentally", "accommodate", "accomplish", "accountant", "accuracy", "accurately", "acid", "activate", "addiction", "additionally", "adequate", "adequately", "adjust", "affordable", "agriculture", "AIDS", "alien", "alongside", "altogether", "ambulance", "amusing", "analyst", "ancestor", "animation", "annually", "anticipate", "anxiety", "apology", "applicant", "appropriately", "arrow", "artwork", "aside", "asset", "assign", "assistance", "assumption", "assure", "astonishing", "attachment", "auction", "audio", "automatic", "automatically", "awareness", "awkward", "badge", "balanced", "ballet", "balloon", "barely", "bargain", "basement", "basket", "bat", "beneficial", "beside", "besides", "bias", "bid", "biological", "blanket", "blow", "bold", "bombing", "booking", "boost", "bound", "brick", "briefly", "broadcaster", "broadly", "bug", "cabin", "canal", "candle", "carbon", "casual", "cave", "certainty", "certificate", "challenging", "championship", "charming", "chase", "cheek", "cheer", "choir", "chop", "circuit", "civilization", "clarify", "classify", "clerk", "cliff", "clinic", "clip", "coincidence", "collector", "colony", "colourful", "comic", "commander", "comparative", "completion", "compose", "composer", "compound", "comprehensive", "comprise", "compulsory", "concrete", "confess", "confusion", "consequently", "conservation", "considerable", "considerably", "consistently", "conspiracy", "consult", "consultant", "consumption", "controversial", "controversy", "convenience", "convention", "conventional", "convey", "convincing", "cope", "corporation", "corridor", "counter (long flat surface)", "coverage", "crack", "craft", "creativity", "critically", "cruise", "cue", "curious", "curriculum", "cute", "dairy", "dare", "darkness", "database", "deadline", "deadly", "dealer", "deck", "defender", "delete", "democracy", "democratic", "demonstration", "depart", "dependent", "deposit", "depression", "derive", "desperately", "destruction", "determination", "devote", "differ", "disability", "disabled", "disagreement", "disappoint", "disappointment", "discourage", "disorder", "distant", "distinct", "distinguish", "distract", "disturb", "dive", "diverse", "diversity", "divorce", "dominant", "donation", "dot", "downtown", "dramatically", "drought", "dull", "dump", "duration", "dynamic", "economics", "economist", "editorial", "efficiently", "elbow", "electronics", "elegant", "elementary", "eliminate", "embrace", "emission", "emotionally", "empire", "enjoyable", "entertaining", "entrepreneur", "envelope", "equip", "equivalent", "era", "erupt", "essentially", "ethic", "ethnic", "evaluation", "evident", "evolution", "evolve", "exceed", "exception", "excessive", "exclude", "exhibit", "exit", "exotic", "expansion", "expertise", "exploit", "exposure", "extension", "extensive", "extensively", "extract", "fabric", "fabulous", "failed", "fake", "fame", "fantasy", "fare", "federal", "fever", "firefighter", "firework", "firm", "firmly", "flavour", "fond", "fool", "forbid", "forecast", "format", "formation", "formerly", "fortunate", "forum", "fossil", "foundation", "founder", "fraction", "fragment", "framework", "fraud", "freely", "frequent", "fulfil", "full-time", "fundamentally", "furious", "gaming", "gay", "gender", "gene", "genetic", "genius", "genuine", "genuinely", "gesture", "gig", "globalization", "globe", "golden", "goodness", "gorgeous", "governor", "graphic", "graphics", "greatly", "greenhouse", "grocery", "guideline", "habitat", "harbour", "headquarters", "heal", "healthcare", "helmet", "hence", "herb", "hidden", "highway", "hilarious", "hip", "historian", "homeless", "honesty", "hook", "hopefully", "hunger", "hypothesis", "icon", "ID", "identical", "illusion", "immigration", "immune", "implement", "implication", "incentive", "incorporate", "incorrect", "independence", "index", "indication", "inevitable", "inevitably", "infer", "inflation", "info", "infrastructure", "inhabitant", "inherit", "ink", "innovation", "innovative", "input", "insert", "inspector", "installation", "instant", "instantly", "integrate", "intellectual", "interact", "interaction", "interpretation", "interval", "invade", "invasion", "investor", "isolate", "isolated", "jail", "jet", "joint", "journalism", "jury", "kit", "ladder", "landing", "lane", "lately", "leaflet", "legend", "lens", "lifetime", "lighting", "likewise", "limitation", "literally", "literary", "litre", "litter", "logo", "lottery", "loyal", "lyric", "magnificent", "make-up", "making", "manufacture", "manufacturing", "marathon", "margin", "marker", "martial", "mate", "mayor", "mechanic", "mechanical", "mechanism", "medal", "medication", "membership", "memorable", "metaphor", "miner", "miserable", "mode", "modest", "monster", "monthly", "monument", "moreover", "mortgage", "mosque", "motion", "motivate", "motivation", "moving", "myth", "naked", "nasty", "navigation", "nearby", "necessity", "negotiate", "negotiation", "neutral", "newly", "norm", "notebook", "novelist", "nowadays", "nursing", "nutrition", "obesity", "observer", "obstacle", "occupation", "occupy", "offender", "ongoing", "openly", "opera", "operator", "optimistic", "orchestra", "organic", "outfit", "output", "outstanding", "overcome", "overnight", "overseas", "ownership", "oxygen", "packet", "palm", "panic", "parade", "parallel", "participation", "partnership", "part-time", "passionate", "password", "patience", "pause", "peer", "penalty", "perceive", "perception", "permanently", "pill", "pity", "placement", "portion", "potentially", "precede", "precious", "precise", "precisely", "predictable", "preference", "pride", "primarily", "principal", "prior", "probability", "probable", "proceed", "programming", "progressive", "prohibit", "promising", "promotion", "prompt", "proportion", "protein", "protester", "psychological", "publicity", "publishing", "punk", "purely", "pursuit", "puzzle", "questionnaire", "racial", "racism", "racist", "radiation", "rail", "random", "rat", "rating", "reasonably", "rebuild", "receiver", "recession", "reckon", "recognition", "recovery", "recruit", "recruitment", "referee", "refugee", "registration", "regulate", "reinforce", "relieve", "relieved", "remarkable", "remarkably", "reporting", "resign", "resolution", "restore", "restrict", "restriction", "retail", "retirement", "revenue", "revision", "ridiculous", "risky", "rival", "rob", "robbery", "rocket", "romance", "rose", "roughly", "ruin", "satisfaction", "scandal", "scare", "scenario", "scholar", "scholarship", "scratch", "screening", "seeker", "seminar", "settler", "severely", "sexy", "shaped", "shocking", "shore", "shortage", "shortly", "short-term", "sibling", "signature", "significance", "skilled", "skull", "slogan", "so-called", "somehow", "sometime", "sophisticated", "spare", "specialize", "specify", "spectacular", "spectator", "speculate", "speculation", "spice", "spill", "spite", "spoil", "spokesman", "spokesperson", "spokeswoman", "sponsorship", "sporting", "stall", "stance", "starve", "steadily", "steam", "stimulate", "strengthen", "strictly", "stroke", "stunning", "subsequent", "subsequently", "suburb", "suffering", "sufficient", "sufficiently", "super", "surgeon", "survival", "survivor", "suspend", "sustainable", "swallow", "sympathetic", "tackle", "tag", "tap", "technological", "teens", "temple", "temporarily", "tendency", "tension", "terminal", "terms", "terribly", "terrify", "territory", "terror", "terrorism", "terrorist", "testing", "textbook", "theft", "therapist", "thesis", "thorough", "thoroughly", "thumb", "timing", "tissue", "ton", "tonne", "tournament", "trace", "trading", "tragedy", "tragic", "trait", "transmit", "transportation", "trap", "treasure", "tribe", "trigger", "trillion", "troop", "tsunami", "ultimate", "unacceptable", "uncertainty", "undergo", "undertake", "unfold", "unfortunate", "unite", "unity", "universal", "urgent", "usage", "useless", "valid", "variation", "vertical", "viewpoint", "visa", "visible", "voluntary", "voting", "wander", "warming", "weekly", "weird", "welfare", "wheat", "whoever", "widespread", "wisdom", "withdraw", "workforce", "workplace", "workshop", "worm", "wrist"], "C1": ["abolish", "abortion", "absence", "absent", "absurd", "abundance", "abuse", "academy", "accelerate", "acceptance", "accessible", "accomplishment", "accordance", "accordingly", "accountability", "accountable", "accumulate", "accumulation", "accusation", "accused", "acid", "acquisition", "acre", "activation", "activist", "acute", "adaptation", "adhere", "adjacent", "adjustment", "administer", "administrative", "administrator", "admission", "adolescent", "adoption", "adverse", "advocate", "aesthetic", "affection", "aftermath", "aggression", "agricultural", "aide", "albeit", "alert", "alien", "align", "alignment", "alike", "allegation", "allege", "allegedly", "alliance", "allocate", "allocation", "allowance", "ally", "aluminium", "amateur", "ambassador", "amend", "amendment", "amid", "analogy", "anchor", "angel", "anonymous", "apparatus", "appealing", "appetite", "applaud", "applicable", "appoint", "appreciation", "arbitrary", "architectural", "archive", "arena", "arguably", "arm", "array", "articulate", "ash", "aspiration", "aspire", "assassination", "assault", "assemble", "assembly", "assert", "assertion", "assurance", "asylum", "atrocity", "attain", "attendance", "attorney", "attribute", "audit", "authentic", "authorize", "auto", "autonomy", "availability", "await", "backdrop", "backing", "backup", "bail", "ballot", "banner", "bare", "barrel", "bass", "bat", "battlefield", "bay", "beam", "beast", "behalf", "beloved", "bench", "benchmark", "beneath", "beneficiary", "betray", "bind", "biography", "bishop", "bizarre", "blade", "blast", "bleed", "blend", "bless", "blessing", "boast", "bonus", "boom", "bounce", "boundary", "bow", "breach", "breakdown", "breakthrough", "breed", "broadband", "browser", "brutal", "buck", "buddy", "buffer", "bulk", "burden", "bureaucracy", "burial", "burst", "cabinet", "calculation", "canvas", "capability", "capitalism", "capitalist", "cargo", "carriage", "carve", "casino", "casualty", "catalogue", "cater", "cattle", "caution", "cautious", "cease", "cemetery", "chamber", "chaos", "characterize", "charm", "charter", "chronic", "chunk", "circulate", "circulation", "citizenship", "civic", "civilian", "clarity", "clash", "classification", "cling", "clinical", "closure", "cluster", "coalition", "coastal", "cocktail", "cognitive", "coincide", "collaborate", "collaboration", "collective", "collision", "colonial", "columnist", "combat", "commence", "commentary", "commentator", "commerce", "commissioner", "commodity", "communist", "companion", "comparable", "compassion", "compel", "compelling", "compensate", "compensation", "competence", "competent", "compile", "complement", "complexity", "compliance", "complication", "comply", "composition", "compromise", "compute", "conceal", "concede", "conceive", "conception", "concession", "condemn", "confer", "confession", "configuration", "confine", "confirmation", "confront", "confrontation", "congratulate", "congregation", "congressional", "conquer", "conscience", "consciousness", "consecutive", "consensus", "consent", "conserve", "consistency", "consolidate", "constituency", "constitute", "constitution", "constitutional", "constraint", "consultation", "contemplate", "contempt", "contend", "contender", "content", "contention", "continually", "contractor", "contradiction", "contrary", "contributor", "conversion", "convict", "conviction", "cooperate", "cooperative", "coordinate", "coordination", "coordinator", "cop", "copper", "copyright", "correction", "correlate", "correlation", "correspond", "correspondence", "correspondent", "corresponding", "corrupt", "corruption", "costly", "councillor", "counselling", "counsellor", "counter (argue against)", "counterpart", "countless", "coup", "courtesy", "craft", "crawl", "creator", "credibility", "credible", "creep", "critique", "crown", "crude", "crush", "crystal", "cult", "cultivate", "curiosity", "custody", "cutting", "cynical", "dam", "damaging", "dawn", "debris", "debut", "decision-making", "decisive", "declaration", "dedicated", "dedication", "deed", "deem", "default", "defect", "defensive", "deficiency", "deficit", "defy", "delegate", "delegation", "delicate", "demon", "denial", "denounce", "dense", "density", "dependence", "depict", "deploy", "deployment", "deposit", "deprive", "deputy", "descend", "descent", "designate", "desirable", "desktop", "destructive", "detain", "detection", "detention", "deteriorate", "devastate", "devil", "devise", "diagnose", "diagnosis", "dictate", "dictator", "differentiate", "dignity", "dilemma", "dimension", "diminish", "dip", "diplomat", "diplomatic", "directory", "disastrous", "discard", "discharge", "disclose", "disclosure", "discourse", "discretion", "discrimination", "dismissal", "displace", "disposal", "dispose", "dispute", "disrupt", "disruption", "dissolve", "distinction", "distinctive", "distort", "distress", "disturbing", "divert", "divine", "doctrine", "documentation", "domain", "dominance", "donor", "dose", "drain", "drift", "driving", "drown", "dual", "dub", "dumb", "duo", "dynamic", "eager", "earnings", "ease", "echo", "ecological", "educator", "effectiveness", "efficiency", "ego", "elaborate", "electoral", "elevate", "eligible", "elite", "embark", "embarrassment", "embassy", "embed", "embody", "emergence", "empirical", "empower", "enact", "encompass", "encouragement", "encouraging", "endeavour", "endless", "endorse", "endorsement", "endure", "enforce", "enforcement", "engagement", "engaging", "enquire", "enrich", "enrol", "ensue", "enterprise", "enthusiast", "entitle", "entity", "epidemic", "equality", "equation", "erect", "escalate", "essence", "establishment", "eternal", "evacuate", "evoke", "evolutionary", "exaggerate", "excellence", "exceptional", "excess", "exclusion", "exclusive", "exclusively", "execute", "execution", "exert", "exile", "exit", "expenditure", "experimental", "expire", "explicit", "explicitly", "exploitation", "explosive", "extract", "extremist", "facilitate", "faction", "faculty", "fade", "fairness", "fatal", "fate", "favourable", "feat", "feminist", "fibre", "fierce", "film-maker", "filter", "fine", "firearm", "fit", "fixture", "flaw", "flawed", "flee", "fleet", "flesh", "flexibility", "flourish", "fluid", "footage", "foreigner", "forge", "formula", "formulate", "forth", "forthcoming", "foster", "fragile", "franchise", "frankly", "frustrated", "frustrating", "frustration", "functional", "fundraising", "funeral", "gallon", "gambling", "gathering", "gaze", "gear", "generic", "genocide", "glance", "glimpse", "glorious", "glory", "governance", "grace", "grasp", "grave (for dead person)", "grave (serious)", "gravity", "grid", "grief", "grin", "grind", "grip", "gross", "guerrilla", "guidance", "guilt", "gut", "hail", "halfway", "halt", "handful", "handling", "handy", "harassment", "hardware", "harmony", "harsh", "harvest", "hatred", "haunt", "hazard", "heighten", "heritage", "hierarchy", "high-profile", "hint", "homeland", "hook", "hopeful", "horizon", "horn", "hostage", "hostile", "hostility", "humanitarian", "humanity", "humble", "hydrogen", "identification", "ideological", "ideology", "idiot", "ignorance", "imagery", "immense", "imminent", "implementation", "imprison", "imprisonment", "inability", "inadequate", "inappropriate", "incidence", "inclined", "inclusion", "incur", "indicator", "indictment", "indigenous", "induce", "indulge", "inequality", "infamous", "infant", "infect", "inflict", "influential", "inherent", "inhibit", "initiate", "inject", "injection", "injustice", "inmate", "insertion", "insider", "inspect", "inspection", "inspiration", "instinct", "institutional", "instruct", "instrumental", "insufficient", "insult", "intact", "intake", "integral", "integrated", "integration", "integrity", "intellectual", "intensify", "intensity", "intensive", "intent", "interactive", "interface", "interfere", "interference", "interim", "interior", "intermediate", "intervene", "intervention", "intimate", "intriguing", "investigator", "invisible", "invoke", "involvement", "ironic", "ironically", "irony", "irrelevant", "isolation", "judicial", "junction", "jurisdiction", "just", "justification", "kidnap", "kidney", "kingdom", "lad", "landlord", "landmark", "lap", "large-scale", "laser", "latter", "lawn", "lawsuit", "layout", "leak", "leap", "legacy", "legendary", "legislation", "legislative", "legislature", "legitimate", "lengthy", "lesbian", "lesser", "lethal", "liable", "liberal", "liberation", "liberty", "license", "lifelong", "likelihood", "limb", "linear", "line-up", "linger", "listing", "literacy", "liver", "lobby", "log", "logic", "long-standing", "long-time", "loom", "loop", "loyalty", "machinery", "magical", "magistrate", "magnetic", "magnitude", "mainland", "mainstream", "maintenance", "mandate", "mandatory", "manifest", "manipulate", "manipulation", "manuscript", "march", "marginal", "marine", "marketplace", "mask", "massacre", "mathematical", "mature", "maximize", "meaningful", "meantime", "medieval", "meditation", "melody", "memo", "memoir", "memorial", "mentor", "merchant", "mercy", "mere", "merely", "merge", "merger", "merit", "methodology", "midst", "migration", "militant", "militia", "mill", "minimal", "minimize", "mining", "ministry", "minute", "miracle", "misery", "misleading", "missile", "mob", "mobility", "mobilize", "moderate", "modification", "momentum", "monk", "monopoly", "morality", "motive", "motorist", "municipal", "mutual", "namely", "nationwide", "naval", "neglect", "neighbouring", "nest", "net", "newsletter", "niche", "noble", "nod", "nominate", "nomination", "nominee", "nonetheless", "non-profit", "nonsense", "noon", "notable", "notably", "notify", "notorious", "novel", "nursery", "objection", "oblige", "obsess", "obsession", "occasional", "occurrence", "odds", "offering", "offspring", "operational", "opt", "optical", "optimism", "oral", "organizational", "orientation", "originate", "outbreak", "outing", "outlet", "outlook", "outrage", "outsider", "overlook", "overly", "oversee", "overturn", "overwhelm", "overwhelming", "pad", "parameter", "parental", "parish", "parliamentary", "partial", "partially", "passing", "passive", "pastor", "patch", "patent", "pathway", "patrol", "patron", "peak", "peasant", "peculiar", "persist", "persistent", "personnel", "petition", "philosopher", "philosophical", "physician", "pioneer", "pipeline", "pirate", "pit", "plea", "plead", "pledge", "plug", "plunge", "pole", "poll", "pond", "pop", "portfolio", "portray", "postpone", "post-war", "practitioner", "preach", "precedent", "precision", "predator", "predecessor", "predominantly", "pregnancy", "prejudice", "preliminary", "premier", "premise", "premium", "prescribe", "prescription", "presently", "preservation", "preside", "presidency", "presidential", "prestigious", "presumably", "presume", "prevail", "prevalence", "prevention", "prey", "principal", "privatization", "privilege", "probe", "problematic", "proceedings", "proceeds", "processing", "processor", "proclaim", "productive", "productivity", "profitable", "profound", "projection", "prominent", "pronounced", "propaganda", "proposition", "prosecute", "prosecution", "prosecutor", "prospective", "prosperity", "protective", "protocol", "province", "provincial", "provision", "provoke", "psychiatric", "pulse", "pump", "punch", "query", "quest", "quota", "radar", "radical", "rage", "raid", "rally", "ranking", "rape", "ratio", "rational", "ray", "readily", "realization", "realm", "rear", "reasoning", "reassure", "rebel", "rebellion", "recipient", "reconstruction", "recount", "referendum", "reflection", "reform", "refuge", "refusal", "regain", "regardless", "regime", "regulator", "regulatory", "rehabilitation", "reign", "rejection", "relevance", "reliability", "reluctant", "remainder", "remains", "remedy", "reminder", "removal", "render", "renew", "renowned", "rental", "replacement", "reportedly", "representation", "reproduce", "reproduction", "republic", "resemble", "reside", "residence", "residential", "residue", "resignation", "resistance", "respective", "respectively", "restoration", "restraint", "resume", "retreat", "retrieve", "revelation", "revenge", "reverse", "revival", "revive", "revolutionary", "rhetoric", "rifle", "riot", "rip", "ritual", "robust", "rock", "rod", "rotate", "rotation", "ruling", "rumour", "sack", "sacred", "sacrifice", "saint", "sake", "sanction", "say", "scattered", "sceptical", "scope", "screw", "scrutiny", "seal", "secular", "seemingly", "segment", "seize", "seldom", "selective", "senator", "sensation", "sensitivity", "sentiment", "separation", "serial", "settlement", "set-up", "sexuality", "shareholder", "shatter", "shed", "sheer", "shipping", "shoot", "shrink", "shrug", "sigh", "simulate", "simulation", "simultaneously", "sin", "situated", "sketch", "skip", "slam", "slap", "slash", "slavery", "slot", "smash", "snap", "soak", "soar", "socialist", "sole", "solely", "solicitor", "solidarity", "solo", "sound", "sovereignty", "spam", "span", "spare", "spark", "specialized", "specification", "specimen", "spectacle", "spectrum", "spell", "sphere", "spin", "spine", "spotlight", "spouse", "spy", "squad", "squeeze", "stab", "stability", "stabilize", "stake", "standing", "stark", "statistical", "steer", "stem", "stereotype", "stimulus", "stir", "storage", "straightforward", "strain", "strand", "strategic", "striking", "strip (long narrow piece)", "strip (remove clothes/a layer)", "strive", "structural", "stumble", "stun", "submission", "subscriber", "subscription", "subsidy", "substantial", "substantially", "substitute", "substitution", "subtle", "suburban", "succession", "successive", "successor", "suck", "sue", "suicide", "suite", "summit", "superb", "superior", "supervise", "supervision", "supervisor", "supplement", "supportive", "supposedly", "suppress", "supreme", "surge", "surgical", "surplus", "surrender", "surveillance", "suspension", "suspicion", "suspicious", "sustain", "swing", "sword", "symbolic", "syndrome", "synthesis", "systematic", "tackle", "tactic", "tactical", "taxpayer", "tempt", "tenant", "tender", "tenure", "terminal", "terminate", "terrain", "terrific", "testify", "testimony", "texture", "thankfully", "theatrical", "theology", "theoretical", "thereafter", "thereby", "thoughtful", "thought-provoking", "thread", "threshold", "thrilled", "thrive", "tide", "tighten", "timber", "timely", "tobacco", "tolerance", "tolerate", "toll", "top", "torture", "toss", "total", "toxic", "trace", "trademark", "trail", "trailer", "transaction", "transcript", "transformation", "transit", "transmission", "transparency", "transparent", "trauma", "treaty", "tremendous", "tribal", "tribunal", "tribute", "trigger", "trio", "triumph", "trophy", "troubled", "trustee", "tuition", "turnout", "turnover", "twist", "undergraduate", "underlying", "undermine", "undoubtedly", "unify", "unprecedented", "unveil", "upcoming", "upgrade", "uphold", "utility", "utilize", "utterly", "vacuum", "vague", "validity", "vanish", "variable", "varied", "vein", "venture", "verbal", "verdict", "verify", "verse", "versus", "vessel", "veteran", "viable", "vibrant", "vice", "vicious", "villager", "violate", "violation", "virtue", "vocal", "vow", "vulnerability", "vulnerable", "ward", "warehouse", "warfare", "warrant", "warrior", "weaken", "weave", "weed", "well", "well-being", "whatsoever", "whereby", "whilst", "whip", "wholly", "widen", "widow", "width", "willingness", "wipe", "wit", "withdrawal", "workout", "worship", "worthwhile", "worthy", "yell", "yield", "youngster"]};
 let student="", studentId="", level="", letter="", queue=[], idx=0, current="", wrongMap={}, firstTryCorrect=0;
-const VOICE_SITE_URL="PASTE_YOUR_GITHUB_PAGES_URL_HERE";
+const APPS_SCRIPT_URL="https://script.google.com/macros/s/AKfycbySJuXSqcDaXPC1dajwJsotdlaGy--XAkBO78pXwQNTPXr91eBy4zjWsV3M7nyQHNKS/exec";
+practiceMode="VOICE";
+let voiceLetterBuffer="";
+let voiceCollectorActive=false;
+let voiceCollectorTimer=null;
+
+
 let correctReady=false, retryMode=false, sessionStarted=null;
 let attemptsOnWord=0, correctionMode=false, correctionCount=0, revealedWords={};
 let lastSlow=false, definitionUsed={}, audioBusy=false;
@@ -240,28 +248,14 @@ function loginStudent(){
     })
     .loginStudent(id,pw);
 }
-function logoutStudent(){
+function _unusedLogoutStudent(){
   student=""; studentId=""; level=""; letter="";
   document.getElementById("loginId").value="";
   document.getElementById("loginPassword").value="";
   document.getElementById("loginFeedback").textContent="";
   show("home");
 }
-function chooseMode(m){
-  if(m==="VOICE"){
-    if(!VOICE_SITE_URL || VOICE_SITE_URL.indexOf("PASTE_YOUR_")===0){
-      alert("VOICE SPELLING is ready. Please paste your GitHub Pages URL into VOICE_SITE_URL first.");
-      return;
-    }
-    var u=VOICE_SITE_URL
-      +"?studentId="+encodeURIComponent(studentId)
-      +"&student="+encodeURIComponent(student);
-    window.open(u,"_blank");
-    return;
-  }
-  practiceMode="TYPING";
-  show("levelScreen");
-}
+function chooseMode(m){ practiceMode="VOICE"; show("levelScreen"); }
 function chooseLevel(l){
   if(!student){show("home");return;}
   level=l; document.getElementById("levelTitle").textContent=l+" Level • A–Z";
@@ -299,6 +293,7 @@ function updateQuizUI(){
     ans.style.display="none"; vb.classList.remove("hidden");
     document.getElementById("voiceStatus").textContent="Spell the word one letter at a time.";
     document.getElementById("heardLetters").textContent="";
+  voiceLetterBuffer="";
   }else{
     if(qi) qi.textContent="Listen and type the word you hear.";
     if(sb) sb.style.display="";
@@ -442,99 +437,90 @@ function normalizeSpokenLetters(text){
 }
 async function startVoiceSpelling(){
   if(practiceMode!=="VOICE" || correctionMode)return;
+  ensureVoiceCollectorControls();
+
   var status=document.getElementById("voiceStatus");
-  var heard=document.getElementById("heardLetters");
   var btn=document.getElementById("micBtn");
-  heard.textContent="";
 
   if(!window.isSecureContext){
-    status.textContent="Microphone requires a secure HTTPS page.";
+    status.textContent="Microphone requires HTTPS.";
     return;
-  }
-  if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
-    status.textContent="This browser cannot request microphone access.";
-    return;
-  }
-
-  btn.disabled=true;
-  status.textContent="Requesting microphone permission…";
-
-  var stream=null;
-  try{
-    stream=await navigator.mediaDevices.getUserMedia({audio:true});
-    status.textContent="✓ Microphone access allowed.";
-  }catch(err){
-    btn.disabled=false;
-    var n=(err&&err.name)||"UnknownError";
-    var msg=(err&&err.message)||"";
-    if(n==="NotAllowedError" || n==="PermissionDeniedError"){
-      status.textContent="Microphone permission denied. Open this site's permissions and set Microphone to Allow.";
-    }else if(n==="NotFoundError" || n==="DevicesNotFoundError"){
-      status.textContent="No microphone was found on this device.";
-    }else if(n==="NotReadableError" || n==="TrackStartError"){
-      status.textContent="Microphone is busy or cannot be accessed. Close other apps using it and try again.";
-    }else if(n==="SecurityError"){
-      status.textContent="Browser security blocked microphone access on this page.";
-    }else{
-      status.textContent="Microphone error: "+n+(msg?" — "+msg:"");
-    }
-    return;
-  }finally{
-    if(stream){
-      stream.getTracks().forEach(function(t){try{t.stop();}catch(e){}});
-    }
   }
 
   var SR=speechRecognitionClass();
   if(!SR){
-    btn.disabled=false;
-    status.textContent="Microphone works, but speech recognition is not supported in this browser. Please use Chrome or Edge.";
+    status.textContent="Speech recognition is not supported. Please use Chrome or Edge.";
     return;
   }
 
   try{ if(voiceRecognition) voiceRecognition.abort(); }catch(e){}
-  var r=new SR(); voiceRecognition=r;
-  r.lang="en-GB"; r.interimResults=false; r.continuous=false; r.maxAlternatives=5;
-  status.textContent="🎤 Listening… spell one letter at a time.";
 
-  r.onstart=function(){ btn.textContent="🔴 LISTENING…"; };
+  var r=new SR();
+  voiceRecognition=r;
+  r.lang="en-GB";
+  r.interimResults=true;
+  r.continuous=true;
+  r.maxAlternatives=10;
+  voiceCollectorActive=true;
+
+  status.textContent="🎤 Listening… spell ONE LETTER AT A TIME.";
+  btn.disabled=true;
+  btn.textContent="🔴 LISTENING…";
+
   r.onresult=function(ev){
-    var candidates=[];
-    for(var i=0;i<ev.results[0].length;i++){
-      var raw=ev.results[0][i].transcript;
-      var letters=normalizeSpokenLetters(raw);
-      if(letters)candidates.push({raw:raw,letters:letters});
+    // Only consume final recognition results to avoid duplicate interim letters.
+    for(var ri=ev.resultIndex;ri<ev.results.length;ri++){
+      if(!ev.results[ri].isFinal)continue;
+      var fake={results:[ev.results[ri]]};
+      var chunk=chooseBestLetterChunk(fake);
+      if(chunk){
+        var targetLen=String(current||"").replace(/[^A-Za-z]/g,"").length;
+        if(targetLen && voiceLetterBuffer.length+chunk.length>targetLen){
+          chunk=chunk.slice(0,Math.max(0,targetLen-voiceLetterBuffer.length));
+        }
+        voiceLetterBuffer+=chunk;
+        renderVoiceBuffer();
+
+        // Auto-check once the expected number of letters has been collected.
+        if(targetLen && voiceLetterBuffer.length===targetLen){
+          var answer=voiceLetterBuffer;
+          voiceLetterBuffer="";
+          setTimeout(function(){checkVoiceAnswer(answer);},250);
+          try{r.stop();}catch(e){}
+          return;
+        }
+      }else{
+        status.textContent="I couldn't identify that letter. Say the letter again.";
+      }
     }
-    var best=candidates[0]||{raw:"",letters:""};
-    var exact=candidates.find(function(x){return normalize(x.letters)===normalize(current);});
-    if(exact)best=exact;
-    heard.textContent=best.letters ? best.letters.split("").join(" ") : "—";
-    status.textContent=best.letters ? "I HEARD:" : "I couldn't clearly hear the letters. Try again.";
-    if(best.letters) checkVoiceAnswer(best.letters);
   };
+
   r.onerror=function(ev){
     var e=ev&&ev.error?ev.error:"unknown";
-    if(e==="not-allowed" || e==="service-not-allowed"){
-      status.textContent="Speech recognition permission was denied by the browser.";
-    }else if(e==="audio-capture"){
-      status.textContent="Speech recognition could not capture audio from the microphone.";
-    }else if(e==="no-speech"){
-      status.textContent="No speech was detected. Tap the microphone and spell again.";
+    if(e==="no-speech"){
+      status.textContent="No letter heard. Tap START MICROPHONE and try again.";
+    }else if(e==="not-allowed" || e==="service-not-allowed"){
+      status.textContent="Microphone / speech recognition permission was denied.";
     }else if(e==="network"){
-      status.textContent="Speech recognition network error. Check the internet connection and try again.";
+      status.textContent="Speech recognition network error. Please try again.";
     }else{
       status.textContent="Speech recognition error: "+e;
     }
   };
+
   r.onend=function(){
-    btn.disabled=false; btn.textContent="🎤 START MICROPHONE";
-    if(status.textContent.indexOf("Listening")>=0) status.textContent="Tap the microphone and try again.";
+    voiceCollectorActive=false;
+    btn.disabled=false;
+    btn.textContent="🎤 START MICROPHONE";
+    if(voiceLetterBuffer) renderVoiceBuffer();
   };
+
   try{
     r.start();
   }catch(e){
-    btn.disabled=false; btn.textContent="🎤 START MICROPHONE";
-    status.textContent="Speech recognition could not start: "+((e&&e.name)||"Error");
+    btn.disabled=false;
+    btn.textContent="🎤 START MICROPHONE";
+    status.textContent="Speech recognition could not start.";
   }
 }
 
@@ -725,16 +711,22 @@ function markLocalComplete(){
   p[letter]={completed:true,date:new Date().toISOString()}; localStorage.setItem(k,JSON.stringify(p));
 }
 function saveResult(completed){
-  const payload={student,studentId,level,letter,total:queue.length,firstTryCorrect,mistakeWords:Object.keys(wrongMap).length,
-    wrongAttempts:JSON.stringify(wrongMap),completed,mode:retryMode?"TYPING_RETRY":"TYPING",started:sessionStarted?sessionStarted.toISOString():"",finished:new Date().toISOString()};
-  try{
-    if(typeof google!=="undefined" && google.script && google.script.run){
-      google.script.run.withFailureHandler(()=>{}).saveResult(payload);
-    }
-  }catch(e){}
+  const payload={
+    student:student,studentId:studentId,level:level,letter:letter,total:queue.length,
+    firstTryCorrect:firstTryCorrect,mistakeWords:Object.keys(wrongMap).length,
+    wrongAttempts:JSON.stringify(wrongMap),completed:completed,
+    mode:retryMode?"VOICE_RETRY":"VOICE",
+    started:sessionStarted?sessionStarted.toISOString():"",
+    finished:new Date().toISOString()
+  };
+  var q=new URLSearchParams({api:"saveVoice"});
+  Object.keys(payload).forEach(function(k){q.set(k,String(payload[k]));});
+  // Cross-origin write without exposing credentials; response is not required by the quiz.
+  var img=new Image();
+  img.src=APPS_SCRIPT_URL+"?"+q.toString()+"&_="+Date.now();
 }
 function backToLetters(){renderLetters();show("lettersScreen");}
-function goHome(){show("home");}
+function goHome(){show("levelScreen");}
 document.getElementById("answer").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();submitAnswer();}});
 document.getElementById("loginPassword").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();loginStudent();}});
 speechSynthesis.onvoiceschanged=()=>speechSynthesis.getVoices();
@@ -760,35 +752,26 @@ function openRanking(){
   var m=document.getElementById("rankingModalV2");
   var body=document.getElementById("rankingModalBodyV2");
   var title=document.getElementById("rankingModalTitleV2");
-  if(!m||!body||!title){
-    alert("Ranking window could not be opened.");
-    return;
-  }
+  if(!m||!body||!title)return;
   m.style.display="block";
-  title.textContent="🏆 "+(practiceMode==="VOICE"?"VOICE":"TYPING")+" • "+level+" • "+letter+" RANKING";
+  title.textContent="🏆 VOICE • "+level+" • "+letter+" RANKING";
   body.innerHTML="<div style='padding:20px;text-align:center;font-weight:700'>Loading ranking…</div>";
 
-  if(typeof google==="undefined" || !google.script || !google.script.run){
-    body.innerHTML="<div style='padding:20px;text-align:center'>Ranking connection is not available.</div>";
-    return;
-  }
-
-  var finished=false;
+  var cb="voiceRanking_"+Date.now()+"_"+Math.floor(Math.random()*100000);
+  var s=document.createElement("script");
   var timer=setTimeout(function(){
-    if(!finished){
-      body.innerHTML="<div style='padding:20px;text-align:center'><b>Ranking took too long to load.</b><br><span class='small'>Please close this window and try again.</span></div>";
-    }
-  },10000);
-
-  google.script.run
-    .withSuccessHandler(function(rows){
-      finished=true; clearTimeout(timer); renderRankingV2(rows);
-    })
-    .withFailureHandler(function(err){
-      finished=true; clearTimeout(timer);
-      body.innerHTML="<div style='padding:20px;text-align:center'><b>Ranking could not be loaded.</b><br><span class='small'>"+esc(err&&err.message?err.message:String(err||"Unknown error"))+"</span></div>";
-    })
-    .getRanking(level,letter,practiceMode);
+    cleanup();
+    body.innerHTML="<div style='padding:20px;text-align:center'><b>Ranking took too long to load.</b></div>";
+  },12000);
+  function cleanup(){
+    clearTimeout(timer);
+    try{delete window[cb];}catch(e){window[cb]=undefined;}
+    if(s.parentNode)s.parentNode.removeChild(s);
+  }
+  window[cb]=function(rows){cleanup();renderRankingV2(rows);};
+  s.onerror=function(){cleanup();body.innerHTML="<div style='padding:20px;text-align:center'><b>Ranking could not be loaded.</b></div>";};
+  s.src=APPS_SCRIPT_URL+"?api=ranking&level="+encodeURIComponent(level)+"&letter="+encodeURIComponent(letter)+"&mode=VOICE&callback="+encodeURIComponent(cb)+"&_="+Date.now();
+  document.body.appendChild(s);
 }
 function renderRankingV2(rows){
   var body=document.getElementById("rankingModalBodyV2");
@@ -830,6 +813,171 @@ window.addEventListener("load",function(){
   var rm=document.getElementById("rankingModalV2");
   if(rm) rm.addEventListener("click",function(ev){if(ev.target===rm)closeRanking();});
 });
+
+
+const LETTER_ALIASES = {
+  "a":"A","ay":"A","eh":"A",
+  "b":"B","be":"B","bee":"B",
+  "c":"C","see":"C","sea":"C",
+  "d":"D","dee":"D",
+  "e":"E","ee":"E",
+  "f":"F","ef":"F","eff":"F",
+  "g":"G","gee":"G","ji":"G",
+  "h":"H","aitch":"H","h":"H",
+  "i":"I","eye":"I",
+  "j":"J","jay":"J",
+  "k":"K","kay":"K",
+  "l":"L","el":"L","ell":"L",
+  "m":"M","em":"M",
+  "n":"N","en":"N",
+  "o":"O","oh":"O",
+  "p":"P","pea":"P","pee":"P",
+  "q":"Q","cue":"Q","queue":"Q",
+  "r":"R","ar":"R","are":"R",
+  "s":"S","ess":"S",
+  "t":"T","tea":"T","tee":"T",
+  "u":"U","you":"U","yew":"U",
+  "v":"V","vee":"V",
+  "w":"W","doubleyou":"W","double-you":"W","double u":"W",
+  "x":"X","ex":"X",
+  "y":"Y","why":"Y",
+  "z":"Z","zed":"Z","zee":"Z"
+};
+
+function voiceTokenToLetters(token){
+  token=String(token||"").toLowerCase().trim()
+    .replace(/[.,!?;:()[\]{}"']/g,"")
+    .replace(/\s+/g," ");
+  if(!token)return "";
+  if(LETTER_ALIASES[token])return LETTER_ALIASES[token];
+
+  var compact=token.replace(/[^a-z]/g,"");
+  if(LETTER_ALIASES[compact])return LETTER_ALIASES[compact];
+
+  // Browser sometimes returns literal sequences such as "p r o m p t".
+  if(/^[a-z]$/.test(compact)) return compact.toUpperCase();
+
+  return "";
+}
+
+function parseSpelledLetters(raw){
+  raw=String(raw||"").toLowerCase().trim();
+  if(!raw)return "";
+
+  // Handle "double p", "double pee", etc.
+  raw=raw.replace(/\bdouble\s+([a-z]+)\b/g,function(_,x){
+    var l=voiceTokenToLetters(x);
+    return l ? (l+" "+l) : _;
+  });
+
+  var parts=raw.split(/[\s\-]+/).filter(Boolean);
+  var out="";
+  parts.forEach(function(t){
+    var l=voiceTokenToLetters(t);
+    if(l) out+=l;
+  });
+
+  // If recognizer actually returned a compact letter sequence, accept it only
+  // when every character is alphabetic and length is plausible.
+  if(!out){
+    var compact=raw.replace(/[^a-z]/g,"");
+    if(compact.length>1 && compact.length<=24 && /^[a-z]+$/.test(compact)){
+      // Do not treat ordinary recognized words as spelling unless it exactly
+      // matches the current target; this prevents random sentence words.
+      if(normalize(compact)===normalize(current)) out=compact.toUpperCase();
+    }
+  }
+  return out;
+}
+
+function renderVoiceBuffer(){
+  var heard=document.getElementById("heardLetters");
+  var status=document.getElementById("voiceStatus");
+  if(heard) heard.textContent=voiceLetterBuffer ? voiceLetterBuffer.split("").join(" ") : "—";
+  if(status) status.textContent=voiceLetterBuffer ? "I HEARD:" : "🎤 Ready — spell one letter at a time.";
+}
+
+function resetVoiceLetterBuffer(){
+  voiceLetterBuffer="";
+  renderVoiceBuffer();
+}
+
+function deleteLastVoiceLetter(){
+  voiceLetterBuffer=voiceLetterBuffer.slice(0,-1);
+  renderVoiceBuffer();
+}
+
+function ensureVoiceCollectorControls(){
+  var btn=document.getElementById("micBtn");
+  if(!btn || document.getElementById("voiceCollectorTools"))return;
+  var box=document.createElement("div");
+  box.id="voiceCollectorTools";
+  box.style.cssText="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin:12px 0";
+  box.innerHTML='<button type="button" onclick="deleteLastVoiceLetter()" style="padding:10px 16px;border:0;border-radius:12px;font-weight:800;cursor:pointer">⌫ DELETE LAST LETTER</button>'+
+                '<button type="button" onclick="resetVoiceLetterBuffer()" style="padding:10px 16px;border:0;border-radius:12px;font-weight:800;cursor:pointer">↺ CLEAR LETTERS</button>'+
+                '<button type="button" onclick="submitVoiceLetterBuffer()" style="padding:10px 16px;border:0;border-radius:12px;font-weight:800;cursor:pointer">✓ CHECK SPELLING</button>';
+  btn.parentNode.insertBefore(box,btn.nextSibling);
+}
+
+function submitVoiceLetterBuffer(){
+  if(!voiceLetterBuffer)return;
+  var ans=voiceLetterBuffer;
+  voiceLetterBuffer="";
+  checkVoiceAnswer(ans);
+}
+
+function chooseBestLetterChunk(ev){
+  var best="";
+  if(!ev || !ev.results || !ev.results.length)return best;
+  var res=ev.results[ev.results.length-1];
+  for(var i=0;i<res.length;i++){
+    var letters=parseSpelledLetters(res[i].transcript);
+    if(letters){
+      if(!best || letters.length>best.length)best=letters;
+      // Prefer a chunk that advances toward the actual target.
+      var combined=(voiceLetterBuffer+letters).toUpperCase();
+      if(current && normalize(current).indexOf(normalize(combined))===0) return letters;
+    }
+  }
+  return best;
+}
+
+function initExternalVoice(){
+  var p=new URLSearchParams(location.search);
+  studentId=(p.get("sid")||p.get("studentId")||"").trim();
+  student=(p.get("name")||p.get("student")||studentId||"Student").trim();
+  practiceMode="VOICE";
+
+  // Save the launch identity so refreshes on the Voice site do not lose the session.
+  if(studentId){
+    try{
+      sessionStorage.setItem("dts_voice_sid",studentId);
+      sessionStorage.setItem("dts_voice_name",student);
+    }catch(e){}
+  }else{
+    try{
+      studentId=(sessionStorage.getItem("dts_voice_sid")||"").trim();
+      student=(sessionStorage.getItem("dts_voice_name")||studentId||"Student").trim();
+    }catch(e){}
+  }
+
+  if(!studentId){
+    document.body.innerHTML=
+      "<div style='max-width:720px;margin:70px auto;padding:30px;font-family:Arial;text-align:center'>"+
+      "<h1 style='color:#8057e8'>DARE TO SPELL</h1>"+
+      "<p>VOICE SPELLING needs an active student session.</p>"+
+      "<p>Please return to the main DARE TO SPELL page, log in, and choose VOICE SPELLING.</p>"+
+      "</div>";
+    return;
+  }
+
+  var w=document.getElementById("welcomeName");
+  if(w)w.textContent="Welcome, "+student;
+  show("levelScreen");
+  setTimeout(ensureVoiceCollectorControls,300);
+}
+window.addEventListener("load",initExternalVoice);
+
 </script>
 
 <div id="rankingModalV2" style="display:none;position:fixed;inset:0;z-index:999999;background:rgba(20,30,55,.48);padding:18px;overflow:auto">
