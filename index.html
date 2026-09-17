@@ -1000,5 +1000,59 @@ window.addEventListener("load",function(){ show("home"); });
   </div>
 </div>
 
+
+<script id="DTS_TESTED_LETTER_VOICE_V1">
+// Tested lightweight voice spelling recognizer. Typing mode is untouched.
+(function(){
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  const aliases={a:'A',ay:'A',b:'B',be:'B',bee:'B',c:'C',see:'C',sea:'C',d:'D',dee:'D',e:'E',ee:'E',f:'F',ef:'F',g:'G',gee:'G',h:'H',aitch:'H',haitch:'H',i:'I',eye:'I',j:'J',jay:'J',k:'K',kay:'K',l:'L',el:'L',m:'M',em:'M',n:'N',en:'N',o:'O',oh:'O',p:'P',pea:'P',pee:'P',q:'Q',cue:'Q',queue:'Q',r:'R',ar:'R',are:'R',s:'S',ess:'S',t:'T',tea:'T',tee:'T',u:'U',you:'U',v:'V',vee:'V',w:'W','double u':'W','double you':'W',x:'X',ex:'X',y:'Y',why:'Y',z:'Z',zed:'Z',zee:'Z'};
+  let active=null;
+  function target(){return String(window.current||'').toUpperCase().replace(/[^A-Z]/g,'');}
+  function clean(x){return String(x||'').toLowerCase().replace(/[.,!?;:()[\]{}'"_-]/g,' ').replace(/\s+/g,' ').trim();}
+  function decode(x){
+    x=clean(x); if(!x)return [];
+    let toks=x.split(' '),out=[];
+    for(let i=0;i<toks.length;i++){
+      let two=toks.slice(i,i+2).join(' ');
+      if(aliases[two]){out.push(aliases[two]);i++;continue;}
+      let t=toks[i];
+      if(aliases[t])out.push(aliases[t]);
+      else if(t.length===1&&/[a-z]/.test(t))out.push(t.toUpperCase());
+      else if(/^[a-z]{2,30}$/.test(t)&&t.toUpperCase()===target())out.push(...t.toUpperCase());
+    }
+    return out;
+  }
+  function dist(a,b){let m=a.length,n=b.length,d=Array.from({length:m+1},()=>Array(n+1).fill(0));for(let i=0;i<=m;i++)d[i][0]=i;for(let j=0;j<=n;j++)d[0][j]=j;for(let i=1;i<=m;i++)for(let j=1;j<=n;j++)d[i][j]=Math.min(d[i-1][j]+1,d[i][j-1]+1,d[i-1][j-1]+(a[i-1]===b[j-1]?0:1));return d[m][n];}
+  function choose(alts){let t=target(),best=null;alts.forEach((text,i)=>{let letters=decode(text),str=letters.join('');if(!letters.length)return;let score=dist(str,t)*10+Math.abs(str.length-t.length)*3+i*.1;if(!best||score<best.score)best={letters,text,score};});return best;}
+  window.stopVoiceRecognition=function(){try{if(active)active.abort();}catch(e){} active=null;};
+  window.startVoiceSpelling=function(){
+    if(window.practiceMode!=='VOICE'||window.correctionMode)return;
+    const st=document.getElementById('voiceStatus'),btn=document.getElementById('micBtn'),heard=document.getElementById('heardLetters');
+    if(!SR){st.textContent='Voice recognition is not supported on this browser. Please use current Chrome or Edge.';return;}
+    try{speechSynthesis.cancel();}catch(e){}
+    try{if(active)active.abort();}catch(e){}
+    heard.textContent='';
+    let r=new SR(); active=r; r.lang='en-GB';r.continuous=true;r.interimResults=true;r.maxAlternatives=10;
+    btn.disabled=true;btn.textContent='🔴 LISTENING…';st.textContent='🎤 Listening… spell the WHOLE word, one letter after another.';
+    let finalHandled=false;
+    r.onresult=function(e){
+      let all=[];
+      for(let i=e.resultIndex;i<e.results.length;i++){
+        let rr=e.results[i],alts=[];for(let j=0;j<rr.length;j++)alts.push(rr[j].transcript);
+        let best=choose(alts);if(!best)continue;
+        heard.textContent=best.letters.join(' ');
+        let str=best.letters.join(''),t=target();
+        if(str===t){st.textContent='I HEARD: '+best.letters.join(' ');if(!finalHandled){finalHandled=true;try{r.stop();}catch(x){} setTimeout(()=>window.checkVoiceAnswer(str),180);}return;}
+        if(str.length<t.length){st.textContent='I only heard: '+best.letters.join(' ')+'. Keep spelling or try the whole word again. No wrong attempt counted.';}
+        else if(rr.isFinal){st.textContent='I HEARD: '+best.letters.join(' ');if(!finalHandled){finalHandled=true;try{r.stop();}catch(x){} setTimeout(()=>window.checkVoiceAnswer(str),180);}return;}
+      }
+    };
+    r.onerror=function(e){if(e.error==='no-speech')st.textContent='No clear spelling was heard. Please try again. No wrong attempt counted.';else if(e.error==='not-allowed'||e.error==='service-not-allowed')st.textContent='Microphone permission was denied.';else st.textContent='Voice recognition could not finish. Please try again. No wrong attempt counted.';};
+    r.onend=function(){active=null;btn.disabled=false;btn.textContent='🎤 START SPELLING';};
+    try{r.start();}catch(e){btn.disabled=false;btn.textContent='🎤 START SPELLING';st.textContent='Voice recognition could not start. Please try again.';}
+  };
+})();
+</script>
+
 </body>
 </html>
