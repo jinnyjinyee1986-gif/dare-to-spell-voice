@@ -11,28 +11,41 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Harden login connection
+      - name: Remove Voice answer leak
         run: |
           python3 <<'PY'
           from pathlib import Path
           p=Path('index.html')
           s=p.read_text(encoding='utf-8')
-          old='const res=await jsonpRequest({api:"login",loginId:id,passwordHash:passwordHash});'
-          new='''let res;\n    try{\n      res=await jsonpRequest({api:"login",loginId:id,passwordHash:passwordHash,_t:Date.now()});\n    }catch(firstErr){\n      await new Promise(r=>setTimeout(r,700));\n      res=await jsonpRequest({api:"login",loginId:id,passwordHash:passwordHash,_t:Date.now(),retry:1});\n    }'''
-          if old not in s:
-              raise SystemExit('Login request line not found')
-          s=s.replace(old,new,1)
-          # Extend JSONP timeout only if the current implementation uses the previous short timeout.
-          s=s.replace('setTimeout(()=>{cleanup();reject(new Error("timeout"));},10000)',
-                      'setTimeout(()=>{cleanup();reject(new Error("timeout"));},25000)')
-          s=s.replace('setTimeout(function(){cleanup();reject(new Error("timeout"));},10000)',
-                      'setTimeout(function(){cleanup();reject(new Error("timeout"));},25000)')
+
+          # Never show target letters while the microphone is listening.
+          s=s.replace("st.textContent='Listening… spell '+target().split('').join(' – ');",
+                      "st.textContent='🎤 Listening… Spell the word aloud, one letter at a time.';")
+
+          # Never convert the pronunciation of the whole target word into letters.
+          s=s.replace("else if(/^[a-z]{2,30}$/.test(t)&&t.toUpperCase()===target())out.push(...t.toUpperCase())","")
+
+          # Same protection in the older parser/fallback path.
+          old='''  // If recognizer actually returned a compact letter sequence, accept it only
+  // when every character is alphabetic and length is plausible.
+  if(!out){
+    var compact=raw.replace(/[^a-z]/g,"");
+    if(compact.length>1 && compact.length<=24 && /^[a-z]+$/.test(compact)){
+      // Do not treat ordinary recognized words as spelling unless it exactly
+      // matches the current target; this prevents random sentence words.
+      if(normalize(compact)===normalize(current)) out=compact.toUpperCase();
+    }
+  }
+'''
+          if old in s:
+              s=s.replace(old,'')
+
           p.write_text(s,encoding='utf-8')
           PY
-      - name: Commit login fix
+      - name: Commit Voice privacy fix
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add index.html
-          git diff --cached --quiet || git commit -m "Improve Apps Script login reliability"
+          git diff --cached --quiet || git commit -m "Remove Voice answer hint and whole-word shortcut"
           git push
