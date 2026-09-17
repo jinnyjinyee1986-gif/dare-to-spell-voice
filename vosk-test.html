@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>DARE TO SPELL – Vosk Voice Test</title>
+<script src="https://cdn.jsdelivr.net/npm/vosk-browser@0.0.5/dist/vosk.js"></script>
+<style>
+body{font-family:Arial,sans-serif;background:linear-gradient(135deg,#eef5ff,#f8efff);margin:0;padding:20px;color:#26324a}.card{max-width:720px;margin:auto;background:#fff;border-radius:24px;padding:24px;box-shadow:0 12px 35px #0002;text-align:center}h1{margin:0 0 6px;color:#6253c5}.sub{color:#667085}.status{margin:18px 0;padding:13px;border-radius:14px;background:#f3f5ff;font-weight:700}.heard{font-size:28px;letter-spacing:7px;min-height:42px;margin:18px 0}button{border:0;border-radius:14px;padding:13px 18px;margin:6px;font-size:16px;font-weight:700;cursor:pointer}.primary{background:#6757d9;color:white}.secondary{background:#eaf0ff;color:#3e4a7a}.danger{background:#ffecec;color:#9b3030}.word{font-size:18px;font-weight:700;margin-top:15px}.small{font-size:13px;color:#667085;line-height:1.5}.letters{display:grid;grid-template-columns:repeat(7,1fr);gap:7px;margin-top:16px}.letters button{margin:0;padding:10px 0;background:#f1f3fb;color:#27304b}@media(max-width:520px){.letters{grid-template-columns:repeat(6,1fr)}.card{padding:17px}.heard{font-size:23px}}
+</style></head>
+<body><div class="card">
+<h1>🎤 DARE TO SPELL</h1><div class="sub">Vosk Voice Recognition Test • FREE • Local browser recognition</div>
+<div id="status" class="status">Step 1: Load the free English model.</div>
+<button id="load" class="primary">1. LOAD VOICE MODEL</button>
+<button id="start" class="primary" disabled>2. START SPELLING</button>
+<button id="stop" class="danger" disabled>STOP</button>
+<div class="word">Test letters aloud: B • C • D • E • G • M • N • P • T • V • Z</div>
+<div class="heard">I HEARD: <span id="heard">—</span></div>
+<div id="raw" class="small">Raw recognition: —</div>
+<div class="letters" id="pad"></div>
+<button id="clear" class="secondary">CLEAR</button>
+<p class="small">Say letters slowly with a short pause, for example: “P … R … O … M … P … T”. The first model load is large (about 40 MB) and can take time on mobile data. The A–Z pad is only a fallback for testing.</p>
+</div>
+<script>
+const MODEL='https://alphacephei.com/vosk/models/vosk-model-small-en-us-0.15.zip';
+let model,rec,stream,ctx,node,source,port,buffer=[];
+const $=id=>document.getElementById(id), status=t=>$('status').textContent=t;
+const aliases={a:'A',ay:'A',b:'B',be:'B',bee:'B',c:'C',see:'C',sea:'C',d:'D',dee:'D',e:'E',ee:'E',f:'F',ef:'F',g:'G',gee:'G',h:'H',aitch:'H',i:'I',eye:'I',j:'J',jay:'J',k:'K',kay:'K',l:'L',el:'L',m:'M',em:'M',n:'N',en:'N',o:'O',oh:'O',p:'P',pea:'P',pee:'P',q:'Q',cue:'Q',queue:'Q',r:'R',are:'R',s:'S',ess:'S',t:'T',tea:'T',tee:'T',u:'U',you:'U',v:'V',vee:'V',w:'W','double u':'W','double you':'W',x:'X',ex:'X',y:'Y',why:'Y',z:'Z',zed:'Z',zee:'Z'};
+function decode(text){text=String(text||'').toLowerCase().replace(/[^a-z ]/g,' ').replace(/\s+/g,' ').trim();if(!text)return[];text=text.replace(/double you/g,'double you').replace(/double u/g,'double u');let toks=text.split(' '),out=[];for(let i=0;i<toks.length;i++){let two=toks.slice(i,i+2).join(' ');if(aliases[two]){out.push(aliases[two]);i++;continue}let t=toks[i];if(aliases[t])out.push(aliases[t]);else if(t.length===1&&/[a-z]/.test(t))out.push(t.toUpperCase())}return out}
+function show(){ $('heard').textContent=buffer.length?buffer.join(' '):'—' }
+for(const l of 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'){let b=document.createElement('button');b.textContent=l;b.onclick=()=>{buffer.push(l);show()};$('pad').appendChild(b)}
+$('clear').onclick=()=>{buffer=[];show();$('raw').textContent='Raw recognition: —'};
+$('load').onclick=async()=>{try{$('load').disabled=true;status('Downloading/loading Vosk English model… please wait.');model=await Vosk.createModel(MODEL);port=new MessageChannel();model.registerPort(port.port1);rec=new model.KaldiRecognizer(48000);rec.setWords(true);rec.on('partialresult',m=>{let t=m.result.partial||'';$('raw').textContent='Raw recognition: '+(t||'—');let d=decode(t);if(d.length){buffer=d;show()}});rec.on('result',m=>{let t=m.result.text||'';$('raw').textContent='Raw recognition: '+(t||'—');let d=decode(t);if(d.length){buffer=d;show()}});$('start').disabled=false;status('Model ready. Tap START SPELLING.');}catch(e){console.error(e);$('load').disabled=false;status('Model could not load: '+(e.message||e));}};
+$('start').onclick=async()=>{try{buffer=[];show();stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true,channelCount:1},video:false});ctx=new (window.AudioContext||window.webkitAudioContext)({sampleRate:48000});await ctx.audioWorklet.addModule('https://cdn.jsdelivr.net/npm/vosk-browser@0.0.5/dist/recognizer-processor.js');node=new AudioWorkletNode(ctx,'recognizer-processor',{channelCount:1,numberOfInputs:1,numberOfOutputs:1});node.port.postMessage({action:'init',recognizerId:rec.id},[port.port2]);node.connect(ctx.destination);source=ctx.createMediaStreamSource(stream);source.connect(node);$('start').disabled=true;$('stop').disabled=false;status('Listening… spell the letters slowly.');}catch(e){console.error(e);status('Microphone/start error: '+(e.message||e));}};
+$('stop').onclick=async()=>{try{if(stream)stream.getTracks().forEach(t=>t.stop());if(source)source.disconnect();if(node)node.disconnect();if(ctx)await ctx.close();}catch(e){}$('stop').disabled=true;$('start').disabled=false;status('Stopped. Check I HEARD above.');};
+</script></body></html>
