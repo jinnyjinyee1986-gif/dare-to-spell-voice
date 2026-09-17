@@ -1,0 +1,103 @@
+name: Fix Login Session Persistence
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/fix-login-session.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Patch login session only
+        shell: python
+        run: |
+          from pathlib import Path
+          p = Path("index.html")
+          s = p.read_text(encoding="utf-8")
+
+          old_set = 'try{sessionStorage.setItem("dts_sid",studentId);sessionStorage.setItem("dts_name",student);}catch(e){}'
+          new_set = '''try{
+            sessionStorage.setItem("dts_sid",studentId);
+            sessionStorage.setItem("dts_name",student);
+            localStorage.setItem("dts_sid",studentId);
+            localStorage.setItem("dts_name",student);
+          }catch(e){}'''
+          if old_set in s:
+              s = s.replace(old_set, new_set, 1)
+
+          old_remove = 'try{sessionStorage.removeItem("dts_sid");sessionStorage.removeItem("dts_name");}catch(e){}'
+          new_remove = '''try{
+            sessionStorage.removeItem("dts_sid");sessionStorage.removeItem("dts_name");
+            localStorage.removeItem("dts_sid");localStorage.removeItem("dts_name");
+          }catch(e){}'''
+          if old_remove in s:
+              s = s.replace(old_remove, new_remove, 1)
+
+          old_mode = 'function chooseMode(m){ practiceMode=(m==="VOICE"?"VOICE":"TYPING"); show("levelScreen"); }'
+          new_mode = '''function restoreStudentSession(){
+            if(student && studentId) return true;
+            try{
+              studentId=sessionStorage.getItem("dts_sid")||localStorage.getItem("dts_sid")||"";
+              student=sessionStorage.getItem("dts_name")||localStorage.getItem("dts_name")||"";
+            }catch(e){}
+            if(student && studentId){
+              try{
+                sessionStorage.setItem("dts_sid",studentId);
+                sessionStorage.setItem("dts_name",student);
+              }catch(e){}
+              var wn=document.getElementById("welcomeName");
+              if(wn) wn.textContent="Welcome, "+student;
+              return true;
+            }
+            return false;
+          }
+          function chooseMode(m){
+            if(!restoreStudentSession()){ show("home"); return; }
+            practiceMode=(m==="VOICE"?"VOICE":"TYPING");
+            show("levelScreen");
+          }'''
+          if old_mode in s:
+              s = s.replace(old_mode, new_mode, 1)
+          elif 'function restoreStudentSession()' not in s:
+              raise SystemExit("chooseMode marker not found")
+
+          old_level = 'function chooseLevel(l){\n  if(!student){show("home");return;}'
+          new_level = 'function chooseLevel(l){\n  if(!restoreStudentSession()){show("home");return;}'
+          if old_level in s:
+              s = s.replace(old_level, new_level, 1)
+
+          marker = '</script>'
+          boot = '''
+          // Restore a successful login after a browser refresh / microphone permission transition.
+          window.addEventListener("pageshow",function(){
+            if(restoreStudentSession()){
+              var home=document.getElementById("home");
+              var mode=document.getElementById("modeScreen");
+              if(home && !home.classList.contains("hidden") && mode){
+                show("modeScreen");
+              }
+            }
+          });
+          '''
+          if 'microphone permission transition' not in s:
+              pos=s.rfind(marker)
+              if pos<0: raise SystemExit("closing script marker not found")
+              s=s[:pos]+boot+s[pos:]
+
+          p.write_text(s,encoding="utf-8")
+
+      - name: Commit session fix
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          git diff --cached --quiet && exit 0
+          git commit -m "Keep student logged in when entering Voice mode"
+          git push
