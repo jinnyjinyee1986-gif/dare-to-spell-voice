@@ -11,44 +11,31 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Patch formal voice function
+      - name: Hide answer hint and add Clear button
         run: |
           python3 <<'PY'
           from pathlib import Path
           p=Path('index.html')
           s=p.read_text(encoding='utf-8')
-          start=s.find('async function startVoiceSpelling(){')
-          end=s.find('\nfunction checkVoiceAnswer(', start)
-          if start < 0 or end < 0:
-              raise SystemExit('Voice function boundaries not found')
-          new='''async function startVoiceSpelling(){
-            if(practiceMode!=="VOICE" || correctionMode)return;
-            const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
-            const status=document.getElementById("voiceStatus"), btn=document.getElementById("micBtn"), heard=document.getElementById("heardLetters");
-            if(!SR){status.textContent="Voice recognition is not supported. Please use current Chrome or Edge.";return;}
-            try{speechSynthesis.cancel();}catch(e){}
-            try{if(voiceRecognition)voiceRecognition.abort();}catch(e){}
-            const aliases={a:'A',ay:'A',b:'B',be:'B',bee:'B',c:'C',see:'C',sea:'C',d:'D',dee:'D',e:'E',ee:'E',f:'F',ef:'F',g:'G',gee:'G',h:'H',aitch:'H',i:'I',eye:'I',j:'J',jay:'J',k:'K',kay:'K',l:'L',el:'L',m:'M',em:'M',n:'N',en:'N',o:'O',oh:'O',p:'P',pea:'P',pee:'P',q:'Q',cue:'Q',queue:'Q',r:'R',are:'R',s:'S',ess:'S',t:'T',tea:'T',tee:'T',u:'U',you:'U',v:'V',vee:'V',w:'W','double u':'W','double you':'W',x:'X',ex:'X',y:'Y',why:'Y',z:'Z',zed:'Z',zee:'Z'};
-            const target=normalize(current).replace(/[^A-Z]/g,"");
-            function clean(x){return String(x||'').toLowerCase().replace(/[.,!?;:]/g,' ').replace(/\\s+/g,' ').trim();}
-            function decode(x){x=clean(x);if(!x)return[];let toks=x.split(' '),out=[];for(let i=0;i<toks.length;i++){let two=toks.slice(i,i+2).join(' ');if(aliases[two]){out.push(aliases[two]);i++;continue;}let t=toks[i];if(aliases[t])out.push(aliases[t]);else if(t.length===1&&/[a-z]/.test(t))out.push(t.toUpperCase());else if(/^[a-z]{2,15}$/.test(t)&&t.toUpperCase()===target)out.push(...t.toUpperCase());}return out;}
-            function distance(a,b){let m=a.length,n=b.length,d=Array.from({length:m+1},()=>Array(n+1).fill(0));for(let i=0;i<=m;i++)d[i][0]=i;for(let j=0;j<=n;j++)d[0][j]=j;for(let i=1;i<=m;i++)for(let j=1;j<=n;j++)d[i][j]=Math.min(d[i-1][j]+1,d[i][j-1]+1,d[i-1][j-1]+(a[i-1]===b[j-1]?0:1));return d[m][n];}
-            function choose(alts){let best=null;alts.forEach((text,idx)=>{let l=decode(text),str=l.join('');if(!l.length)return;let score=distance(str,target)*10+Math.abs(str.length-target.length)*3+idx*.1;if(!best||score<best.score)best={letters:l,text,score};});return best;}
-            heard.textContent="";
-            let r=new SR();voiceRecognition=r;r.lang="en-GB";r.continuous=true;r.interimResults=true;r.maxAlternatives=10;
-            let handled=false;btn.disabled=true;btn.textContent="🔴 LISTENING…";status.textContent="🎤 Listening… spell "+target.split('').join(' – ');
-            r.onresult=function(e){for(let i=e.resultIndex;i<e.results.length;i++){let rr=e.results[i],alts=[];for(let j=0;j<rr.length;j++)alts.push(rr[j].transcript);let best=choose(alts);if(!best)continue;let letters=best.letters,str=letters.join('');heard.textContent=letters.join(' ');if(str===target){status.textContent="I HEARD: "+letters.join(' ');if(!handled){handled=true;try{r.stop();}catch(x){}setTimeout(()=>checkVoiceAnswer(str),180);}return;}if(str.length<target.length){status.textContent="I only heard: "+letters.join(' ')+". Keep spelling or try the whole word again. No wrong attempt counted.";}else if(rr.isFinal){status.textContent="I HEARD: "+letters.join(' ');if(!handled){handled=true;try{r.stop();}catch(x){}setTimeout(()=>checkVoiceAnswer(str),180);}return;}}};
-            r.onerror=function(e){if(e.error==='no-speech')status.textContent="No clear spelling was heard. Please try again. No wrong attempt counted.";else if(e.error==='not-allowed'||e.error==='service-not-allowed')status.textContent="Microphone permission was denied.";else status.textContent="Voice recognition could not finish. Please try again. No wrong attempt counted.";};
-            r.onend=function(){voiceRecognition=null;btn.disabled=false;btn.textContent="🎤 START SPELLING";};
-            try{r.start();}catch(e){btn.disabled=false;btn.textContent="🎤 START SPELLING";status.textContent="Voice recognition could not start. Please try again.";}
-          }
-          '''
-          s=s[:start]+new+s[end:]
-          marker='<script id="DTS_TESTED_LETTER_VOICE_V1">'
-          a=s.find(marker)
-          if a>=0:
-              b=s.find('</script>',a)
-              if b>=0:s=s[:a]+s[b+9:]
+          old='status.textContent="🎤 Listening… spell "+target.split(\'\').join(\' – \');'
+          new='status.textContent="🎤 Listening… Spell the word aloud, one letter at a time.";'
+          if old not in s:
+              raise SystemExit('Listening answer-hint line not found')
+          s=s.replace(old,new,1)
+
+          # Install/replace a small CLEAR button beside the microphone button.
+          marker='DTS_VOICE_CLEAR_BUTTON_V1'
+          a=s.find('function ensureVoiceCollectorControls(){')
+          b=s.find('\nfunction ',a+10)
+          if a<0 or b<0:
+              raise SystemExit('ensureVoiceCollectorControls function not found')
+          block=s[a:b]
+          if marker not in block:
+              insert='''\n  // DTS_VOICE_CLEAR_BUTTON_V1\n  var mic=document.getElementById("micBtn");\n  if(mic && !document.getElementById("voiceClearBtn")){\n    var clearBtn=document.createElement("button");\n    clearBtn.id="voiceClearBtn";\n    clearBtn.type="button";\n    clearBtn.className="secondary";\n    clearBtn.textContent="CLEAR";\n    clearBtn.style.marginLeft="10px";\n    clearBtn.onclick=function(){\n      try{if(voiceRecognition)voiceRecognition.abort();}catch(e){}\n      voiceRecognition=null;\n      voiceLetterBuffer="";\n      try{renderVoiceBuffer();}catch(e){}\n      var heard=document.getElementById("heardLetters");\n      if(heard)heard.textContent="";\n      var status=document.getElementById("voiceStatus");\n      if(status)status.textContent="Cleared. Press START SPELLING and spell the whole word again.";\n      var mb=document.getElementById("micBtn");\n      if(mb){mb.disabled=false;mb.textContent="🎤 START SPELLING";}\n    };\n    mic.insertAdjacentElement("afterend",clearBtn);\n  }\n'''
+              pos=block.rfind('}')
+              if pos<0: raise SystemExit('ensureVoiceCollectorControls closing brace not found')
+              block=block[:pos]+insert+block[pos:]
+              s=s[:a]+block+s[b:]
           p.write_text(s,encoding='utf-8')
           PY
       - name: Commit formal page
@@ -56,5 +43,5 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add index.html
-          git diff --cached --quiet || git commit -m "Install tested voice recognizer in formal page"
+          git diff --cached --quiet || git commit -m "Hide Voice answer hint and add Clear button"
           git push
