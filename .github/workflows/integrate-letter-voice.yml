@@ -11,31 +11,23 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Hide answer hint and add Clear button
+      - name: Require actual spoken letter spelling
         run: |
           python3 <<'PY'
           from pathlib import Path
           p=Path('index.html')
           s=p.read_text(encoding='utf-8')
-          old='status.textContent="🎤 Listening… spell "+target.split(\'\').join(\' – \');'
-          new='status.textContent="🎤 Listening… Spell the word aloud, one letter at a time.";'
-          if old not in s:
-              raise SystemExit('Listening answer-hint line not found')
-          s=s.replace(old,new,1)
-
-          # Install/replace a small CLEAR button beside the microphone button.
-          marker='DTS_VOICE_CLEAR_BUTTON_V1'
-          a=s.find('function ensureVoiceCollectorControls(){')
-          b=s.find('\nfunction ',a+10)
-          if a<0 or b<0:
-              raise SystemExit('ensureVoiceCollectorControls function not found')
-          block=s[a:b]
-          if marker not in block:
-              insert='''\n  // DTS_VOICE_CLEAR_BUTTON_V1\n  var mic=document.getElementById("micBtn");\n  if(mic && !document.getElementById("voiceClearBtn")){\n    var clearBtn=document.createElement("button");\n    clearBtn.id="voiceClearBtn";\n    clearBtn.type="button";\n    clearBtn.className="secondary";\n    clearBtn.textContent="CLEAR";\n    clearBtn.style.marginLeft="10px";\n    clearBtn.onclick=function(){\n      try{if(voiceRecognition)voiceRecognition.abort();}catch(e){}\n      voiceRecognition=null;\n      voiceLetterBuffer="";\n      try{renderVoiceBuffer();}catch(e){}\n      var heard=document.getElementById("heardLetters");\n      if(heard)heard.textContent="";\n      var status=document.getElementById("voiceStatus");\n      if(status)status.textContent="Cleared. Press START SPELLING and spell the whole word again.";\n      var mb=document.getElementById("micBtn");\n      if(mb){mb.disabled=false;mb.textContent="🎤 START SPELLING";}\n    };\n    mic.insertAdjacentElement("afterend",clearBtn);\n  }\n'''
-              pos=block.rfind('}')
-              if pos<0: raise SystemExit('ensureVoiceCollectorControls closing brace not found')
-              block=block[:pos]+insert+block[pos:]
-              s=s[:a]+block+s[b:]
+          # Critical assessment rule: never convert a spoken whole word into its letters.
+          # A student must actually say the individual letter names.
+          old="else if(/^[a-z]{2,15}$/.test(t)&&t.toUpperCase()===target)out.push(...t.toUpperCase());"
+          if old in s:
+              s=s.replace(old,"",1)
+          # Also reject a recognition transcript that is simply the target word pronunciation.
+          needle="function choose(alts){let best=null;alts.forEach((text,idx)=>{let l=decode(text),str=l.join('');if(!l.length)return;"
+          replacement="function choose(alts){let best=null;alts.forEach((text,idx)=>{let raw=clean(text);if(raw && raw.replace(/[^a-z]/g,'').toUpperCase()===target && raw.indexOf(' ')<0)return;let l=decode(text),str=l.join('');if(!l.length)return;"
+          if needle not in s:
+              raise SystemExit('Voice choose function not found')
+          s=s.replace(needle,replacement,1)
           p.write_text(s,encoding='utf-8')
           PY
       - name: Commit formal page
@@ -43,5 +35,5 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add index.html
-          git diff --cached --quiet || git commit -m "Hide Voice answer hint and add Clear button"
+          git diff --cached --quiet || git commit -m "Require spoken letter spelling in Voice mode"
           git push
