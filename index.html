@@ -251,7 +251,13 @@ async function loginStudent(){
   fb.textContent="Checking…"; fb.className="feedback";
   try{
     const passwordHash=await sha256Hex(pw);
-    const res=await jsonpRequest({api:"login",loginId:id,passwordHash:passwordHash});
+    let res;
+    try{
+      res=await jsonpRequest({api:"login",loginId:id,passwordHash:passwordHash,_t:Date.now()});
+    }catch(firstErr){
+      await new Promise(r=>setTimeout(r,700));
+      res=await jsonpRequest({api:"login",loginId:id,passwordHash:passwordHash,_t:Date.now(),retry:1});
+    }
     btn.disabled=false;
     if(res&&res.ok){
       student=res.name; studentId=res.loginId;
