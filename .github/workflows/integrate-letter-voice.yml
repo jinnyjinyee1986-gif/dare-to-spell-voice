@@ -1,4 +1,4 @@
-name: Install Voice UI Fix
+name: Restore Reliable Voice Recognition
 on:
   workflow_dispatch:
   push:
@@ -11,28 +11,46 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Add visible Clear button
+      - name: Restore tested recognizer behaviour
         shell: bash
         run: |
           python3 - <<'PY'
           from pathlib import Path
           p=Path('index.html')
           s=p.read_text(encoding='utf-8')
+
+          # Restore the decoder behaviour from the version the user confirmed worked well.
+          old="else if(t.length===1&&/[a-z]/.test(t))out.push(t.toUpperCase());}return out;}"
+          new="else if(t.length===1&&/[a-z]/.test(t))out.push(t.toUpperCase());else if(/^[a-z]{2,15}$/.test(t)&&t.toUpperCase()===target)out.push(...t.toUpperCase());}return out;}"
+          if old in s:
+              s=s.replace(old,new,1)
+
+          # Remove the later over-strict filter that caused genuine letter spelling to be discarded.
+          strict="let raw=clean(text);if(raw && raw.replace(/[^a-z]/g,'').toUpperCase()===target && raw.indexOf(' ')<0)return;"
+          s=s.replace(strict,'')
+
+          # Never reveal target letters in the listening prompt.
+          s=s.replace("status.textContent=\"🎤 Listening… spell \"+target.split('').join(' – ');",
+                      "status.textContent=\"🎤 Listening… Spell the word aloud, one letter at a time.\";")
+          s=s.replace("status.textContent='🎤 Listening… spell '+target.split('').join(' – ');",
+                      "status.textContent='🎤 Listening… Spell the word aloud, one letter at a time.';")
+
+          # Keep the visible CLEAR button.
           needle='<button type="button" id="micBtn" class="primary" onclick="startVoiceSpelling()" style="font-size:18px;padding:14px 24px">🎤 START SPELLING</button>'
-          button='<button type="button" id="voiceClearMainBtn" class="secondary" onclick="clearVoiceSpelling()" style="font-size:18px;padding:14px 24px;margin-left:8px">🧽 CLEAR</button>'
-          if 'id="voiceClearMainBtn"' not in s:
-              if needle not in s: raise SystemExit('mic button not found')
-              s=s.replace(needle,needle+'\n  '+button,1)
+          clear='<button type="button" id="voiceClearMainBtn" class="secondary" onclick="clearVoiceSpelling()" style="font-size:18px;padding:14px 24px;margin-left:8px">🧽 CLEAR</button>'
+          if 'id="voiceClearMainBtn"' not in s and needle in s:
+              s=s.replace(needle,needle+'\n  '+clear,1)
+
           p.write_text(s,encoding='utf-8')
+          assert strict not in s
           assert 'id="voiceClearMainBtn"' in s
-          assert "st.textContent='Listening… spell '+target().split('').join(' – ');" not in s
-          assert "t.toUpperCase()===target())out.push(...t.toUpperCase())" not in s
+          assert 'Listening… spell "+target.split' not in s
           PY
-      - name: Commit patch
+      - name: Commit restored recognizer
         shell: bash
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add index.html
-          git diff --cached --quiet || git commit -m 'Show Clear button in formal Voice spelling'
+          git diff --cached --quiet || git commit -m 'Restore tested Voice recognition while keeping Clear and hidden prompt'
           git push
