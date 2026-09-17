@@ -1,9 +1,9 @@
-name: Install Tested Voice
+name: Install Voice UI Fix
 on:
+  workflow_dispatch:
   push:
     paths:
-      - .github/workflows/integrate-letter-voice.yml
-  workflow_dispatch:
+      - '.github/workflows/integrate-letter-voice.yml'
 permissions:
   contents: write
 jobs:
@@ -11,55 +11,50 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Fix Voice prompt and Clear button
+      - name: Patch index
+        shell: bash
         run: |
-          python3 <<'PY'
+          python3 - <<'PY'
           from pathlib import Path
-          p=Path('index.html')
-          s=p.read_text(encoding='utf-8')
+          p = Path("index.html")
+          s = p.read_text(encoding="utf-8")
+          leak = "st.textContent='Listening… spell '+target().split('').join(' – ');"
+          safe = "st.textContent='Listening… Spell the word aloud, one letter at a time.';"
+          s = s.replace(leak, safe)
+          shortcut = "else if(/^[a-z]{2,30}$/.test(t)&&t.toUpperCase()===target())out.push(...t.toUpperCase())"
+          s = s.replace(shortcut, "")
+          needle = "<button type=\"button\" id=\"micBtn\" class=\"primary\" onclick=\"startVoiceSpelling()\" style=\"font-size:18px;padding:14px 24px\">🎤 START SPELLING</button>"
+          repl = needle + "\n  <button type=\"button\" id=\"voiceClearBtn\" class=\"secondary\" onclick=\"clearVoiceSpelling()\" style=\"font-size:18px;padding:14px 24px;margin-left:8px\">CLEAR</button>"
+          if "id=\"voiceClearBtn\"" not in s:
+              if needle not in s:
+                  raise SystemExit("mic button not found")
+              s = s.replace(needle, repl, 1)
+          anchor = "function submitVoiceLetterBuffer(){"
+          fn = """function clearVoiceSpelling(){
+  try{if(typeof rec!=='undefined'&&rec)rec.abort();}catch(e){}
+  try{if(typeof voiceRecognition!=='undefined'&&voiceRecognition)voiceRecognition.abort();}catch(e){}
+  try{voiceRecognition=null;}catch(e){}
+  try{voiceLetterBuffer='';}catch(e){}
+  var heard=document.getElementById('heardLetters');
+  if(heard)heard.textContent='';
+  var status=document.getElementById('voiceStatus');
+  if(status)status.textContent='Cleared. Press START SPELLING and spell the whole word again.';
+  var btn=document.getElementById('micBtn');
+  if(btn){btn.disabled=false;btn.textContent='🎤 START SPELLING';}
+}
 
-          # Hide target letters while listening.
-          s=s.replace("st.textContent='Listening… spell '+target().split('').join(' – ');",
-                      "st.textContent='🎤 Listening… Spell the word aloud, one letter at a time.';")
-
-          # Never turn a spoken whole word into its spelling.
-          s=s.replace("else if(/^[a-z]{2,30}$/.test(t)&&t.toUpperCase()===target())out.push(...t.toUpperCase())","")
-
-          # Install a permanent CLEAR button beside the microphone button.
-          marker="    heard.textContent='';\n    rec=new SR();"
-          replacement="""    heard.textContent='';
-    let clearBtn=document.getElementById('voiceClearBtn');
-    if(!clearBtn){
-      clearBtn=document.createElement('button');
-      clearBtn.id='voiceClearBtn';
-      clearBtn.type='button';
-      clearBtn.className='secondary';
-      clearBtn.textContent='🧽 CLEAR';
-      clearBtn.style.marginLeft='10px';
-      btn.insertAdjacentElement('afterend',clearBtn);
-    }
-    clearBtn.style.display='inline-block';
-    clearBtn.onclick=function(){
-      try{if(rec)rec.abort();}catch(e){}
-      rec=null;running=false;
-      try{if(typeof voiceRecognition!=='undefined'&&voiceRecognition)voiceRecognition.abort();}catch(e){}
-      try{voiceRecognition=null;}catch(e){}
-      try{voiceLetterBuffer='';}catch(e){}
-      heard.textContent='';
-      st.textContent='Cleared. Press START SPELLING and spell the whole word again.';
-      btn.disabled=false;
-      btn.textContent='🎤 START SPELLING';
-    };
-    rec=new SR();"""
-          if marker in s:
-              s=s.replace(marker,replacement,1)
-
-          p.write_text(s,encoding='utf-8')
+"""
+          if "function clearVoiceSpelling(){" not in s:
+              if anchor not in s:
+                  raise SystemExit("function anchor not found")
+              s = s.replace(anchor, fn + anchor, 1)
+          p.write_text(s, encoding="utf-8")
           PY
-      - name: Commit Voice UI fix
+      - name: Commit patch
+        shell: bash
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add index.html
-          git diff --cached --quiet || git commit -m "Hide Voice answer hint and restore Clear button"
+          git diff --cached --quiet || git commit -m 'Restore Clear button and hide Voice answer letters'
           git push
