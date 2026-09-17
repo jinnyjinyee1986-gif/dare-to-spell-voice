@@ -115,7 +115,7 @@ h1{
 </section>
 
 <section id="levelScreen" class="card hidden">
-<div style="margin-bottom:12px"><button class="secondary" onclick="show('levelScreen')">← LEVELS</button></div>
+<div style="margin-bottom:12px"><button class="secondary" onclick="backToPracticeMode()">⌂ PRACTICE MODE</button></div>
     <div class="topbar">
       <div><h2 id="welcomeName"></h2><div class="small">Choose your level.</div></div>
       <button class="secondary" onclick="logoutStudent()">LOG OUT</button>
@@ -127,13 +127,13 @@ h1{
   </section>
 
   <section id="lettersScreen" class="card hidden">
-    <div class="topbar"><div><h2 id="levelTitle"></h2><div class="small">Choose a letter. Complete the whole letter set.</div></div><button class="secondary" onclick="show('levelScreen')">← Levels</button></div>
+    <div class="topbar"><div><h2 id="levelTitle"></h2><div class="small">Choose a letter. Complete the whole letter set.</div></div><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="secondary" onclick="show('levelScreen')">← LEVELS</button><button class="secondary" onclick="backToPracticeMode()">⌂ PRACTICE MODE</button></div></div>
     <div id="letters" class="letters"></div>
   </section>
 
   <section id="quizScreen" class="card hidden">
 <div id="topQuizNav" style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:14px">
-  <button type="button" class="secondary" onclick="backToQuiz()" style="font-weight:800;font-size:16px;padding:12px 20px;border-radius:18px">← BACK TO QUIZ</button>
+  <div style="display:flex;gap:8px;flex-wrap:wrap"><button type="button" class="secondary" onclick="backToQuiz()" style="font-weight:800;font-size:16px;padding:12px 20px;border-radius:18px">← BACK TO QUIZ</button><button type="button" class="secondary" onclick="backToPracticeMode()" style="font-weight:800;font-size:16px;padding:12px 20px;border-radius:18px">⌂ PRACTICE MODE</button></div>
   <button type="button" class="secondary" id="rankingBtn" style="font-weight:800;font-size:16px;padding:12px 20px;border-radius:18px">🏆 RANKING</button>
 </div>
 <div id="rankingPanel" style="display:none;margin:12px 0 18px;padding:16px;border:1px solid #dbe4f0;border-radius:18px;background:rgba(255,255,255,.95)">
@@ -190,6 +190,7 @@ h1{
     <div class="row stack">
       <button id="retryBtn" class="primary grow" onclick="startRetry()">Retry Mistakes</button>
       <button class="secondary grow" onclick="backToLetters()">Choose Another Letter</button>
+      <button class="secondary grow" onclick="backToPracticeMode()">⌂ PRACTICE MODE</button>
     </div>
   </section>
 
@@ -197,6 +198,7 @@ h1{
     <h2>✓ GROUP COMPLETE</h2>
     <p id="completeText"></p>
     <button class="primary" onclick="backToLetters()">Choose Another Letter</button>
+    <button class="secondary" style="margin-left:8px" onclick="backToPracticeMode()">⌂ PRACTICE MODE</button>
   </section>
 </div>
 
@@ -740,7 +742,15 @@ function saveResult(completed){
   img.src=APPS_SCRIPT_URL+"?"+q.toString()+"&_="+Date.now();
 }
 function backToLetters(){renderLetters();show("lettersScreen");}
-function goHome(){show("levelScreen");}
+function backToPracticeMode(){
+  try { speechSynthesis.cancel(); } catch(e) {}
+  try { if(typeof stopVoiceRecognition === "function") stopVoiceRecognition(); } catch(e) {}
+  var rp=document.getElementById("rankingPanel"); if(rp) rp.style.display="none";
+  var rm=document.getElementById("rankingModalV2"); if(rm) rm.style.display="none";
+  show("modeScreen");
+  window.scrollTo(0,0);
+}
+function goHome(){backToPracticeMode();}
 document.getElementById("answer").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();submitAnswer();}});
 document.getElementById("loginPassword").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();loginStudent();}});
 speechSynthesis.onvoiceschanged=()=>speechSynthesis.getVoices();
