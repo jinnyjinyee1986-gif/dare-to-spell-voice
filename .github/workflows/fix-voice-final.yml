@@ -1,0 +1,53 @@
+name: Fix Voice Final
+'on':
+  push:
+    paths:
+      - '.github/workflows/fix-voice-final.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Patch formal Voice UI
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('index.html')
+          s = p.read_text(encoding='utf-8')
+
+          # 1) Permanent visible CLEAR button beside START SPELLING.
+          old = '''  <button type="button" id="micBtn" class="primary" onclick="startVoiceSpelling()" style="font-size:18px;padding:14px 24px">🎤 START SPELLING</button>'''
+          new = '''  <button type="button" id="micBtn" class="primary" onclick="startVoiceSpelling()" style="font-size:18px;padding:14px 24px">🎤 START SPELLING</button>\n  <button type="button" id="voiceClearBtn" class="secondary" onclick="clearVoiceSpelling()" style="font-size:18px;padding:14px 24px;margin-left:8px">🧽 CLEAR</button>'''
+          if 'id="voiceClearBtn"' not in s:
+              if old not in s: raise SystemExit('mic button marker not found')
+              s = s.replace(old, new, 1)
+
+          # 2) Never reveal target letters while listening.
+          s = s.replace("st.textContent='Listening… spell '+target().split('').join(' – ');",
+                        "st.textContent='🎤 Listening… Spell the word aloud, one letter at a time.';")
+
+          # 3) Never accept pronunciation of whole target word as spelling.
+          s = s.replace("else if(/^[a-z]{2,30}$/.test(t)&&t.toUpperCase()===target())out.push(...t.toUpperCase())", "")
+          old_fallback = '''  // If recognizer actually returned a compact letter sequence, accept it only\n  // when every character is alphabetic and length is plausible.\n  if(!out){\n    var compact=raw.replace(/[^a-z]/g,"");\n    if(compact.length>1 && compact.length<=24 && /^[a-z]+$/.test(compact)){\n      // Do not treat ordinary recognized words as spelling unless it exactly\n      // matches the current target; this prevents random sentence words.\n      if(normalize(compact)===normalize(current)) out=compact.toUpperCase();\n    }\n  }\n'''
+          s = s.replace(old_fallback, '')
+
+          # 4) CLEAR aborts the active tested recognizer and resets without counting wrong.
+          hook = "  window.stopVoiceRecognition=function(){try{if(rec)rec.abort();}catch(e){}rec=null;running=false;};"
+          clear_fn = hook + '''\n  window.clearVoiceSpelling=function(){\n    try{if(rec)rec.abort();}catch(e){}\n    rec=null;running=false;\n    try{if(typeof voiceRecognition!==\"undefined\"&&voiceRecognition)voiceRecognition.abort();}catch(e){}\n    try{voiceRecognition=null;}catch(e){}\n    try{voiceLetterBuffer=\"\";}catch(e){}\n    const heard=document.getElementById('heardLetters');\n    const st=document.getElementById('voiceStatus');\n    const btn=document.getElementById('micBtn');\n    if(heard)heard.textContent='';\n    if(st)st.textContent='Cleared. Press START SPELLING and spell the whole word again. No wrong attempt counted.';\n    if(btn){btn.disabled=false;btn.textContent='🎤 START SPELLING';}\n  };'''
+          if 'window.clearVoiceSpelling=function()' not in s:
+              if hook not in s: raise SystemExit('voice recognizer hook not found')
+              s = s.replace(hook, clear_fn, 1)
+
+          p.write_text(s, encoding='utf-8')
+          PY
+      - name: Commit formal page
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html
+          git diff --cached --quiet || git commit -m 'Fix Voice answer privacy and Clear button'
+          git push
