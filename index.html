@@ -257,7 +257,12 @@ async function loginStudent(){
       document.getElementById("welcomeName").textContent="Welcome, "+student;
       document.getElementById("loginPassword").value=""; fb.textContent=""; show("modeScreen");
     }else{fb.textContent=(res&&res.message)||"Invalid Login ID or Password.";fb.className="feedback bad";}
-  }catch(e){btn.disabled=false;fb.textContent="Login service is temporarily unavailable.";fb.className="feedback bad";}
+  }catch(e){
+    btn.disabled=false;
+    var detail=(e&&e.message)?e.message:String(e||"");
+    fb.textContent="Login connection failed ("+detail+"). Please refresh and try again.";
+    fb.className="feedback bad";
+  }
 }
 function logoutStudent(){
   student="";studentId="";level="";letter="";practiceMode="TYPING";
