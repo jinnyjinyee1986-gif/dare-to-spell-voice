@@ -11,29 +11,28 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Require actual spoken letter spelling
+      - name: Harden login connection
         run: |
           python3 <<'PY'
           from pathlib import Path
           p=Path('index.html')
           s=p.read_text(encoding='utf-8')
-          # Critical assessment rule: never convert a spoken whole word into its letters.
-          # A student must actually say the individual letter names.
-          old="else if(/^[a-z]{2,15}$/.test(t)&&t.toUpperCase()===target)out.push(...t.toUpperCase());"
-          if old in s:
-              s=s.replace(old,"",1)
-          # Also reject a recognition transcript that is simply the target word pronunciation.
-          needle="function choose(alts){let best=null;alts.forEach((text,idx)=>{let l=decode(text),str=l.join('');if(!l.length)return;"
-          replacement="function choose(alts){let best=null;alts.forEach((text,idx)=>{let raw=clean(text);if(raw && raw.replace(/[^a-z]/g,'').toUpperCase()===target && raw.indexOf(' ')<0)return;let l=decode(text),str=l.join('');if(!l.length)return;"
-          if needle not in s:
-              raise SystemExit('Voice choose function not found')
-          s=s.replace(needle,replacement,1)
+          old='const res=await jsonpRequest({api:"login",loginId:id,passwordHash:passwordHash});'
+          new='''let res;\n    try{\n      res=await jsonpRequest({api:"login",loginId:id,passwordHash:passwordHash,_t:Date.now()});\n    }catch(firstErr){\n      await new Promise(r=>setTimeout(r,700));\n      res=await jsonpRequest({api:"login",loginId:id,passwordHash:passwordHash,_t:Date.now(),retry:1});\n    }'''
+          if old not in s:
+              raise SystemExit('Login request line not found')
+          s=s.replace(old,new,1)
+          # Extend JSONP timeout only if the current implementation uses the previous short timeout.
+          s=s.replace('setTimeout(()=>{cleanup();reject(new Error("timeout"));},10000)',
+                      'setTimeout(()=>{cleanup();reject(new Error("timeout"));},25000)')
+          s=s.replace('setTimeout(function(){cleanup();reject(new Error("timeout"));},10000)',
+                      'setTimeout(function(){cleanup();reject(new Error("timeout"));},25000)')
           p.write_text(s,encoding='utf-8')
           PY
-      - name: Commit formal page
+      - name: Commit login fix
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add index.html
-          git diff --cached --quiet || git commit -m "Require spoken letter spelling in Voice mode"
+          git diff --cached --quiet || git commit -m "Improve Apps Script login reliability"
           git push
