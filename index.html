@@ -846,16 +846,6 @@ function parseSpelledLetters(raw){
     if(l) out+=l;
   });
 
-  // If recognizer actually returned a compact letter sequence, accept it only
-  // when every character is alphabetic and length is plausible.
-  if(!out){
-    var compact=raw.replace(/[^a-z]/g,"");
-    if(compact.length>1 && compact.length<=24 && /^[a-z]+$/.test(compact)){
-      // Do not treat ordinary recognized words as spelling unless it exactly
-      // matches the current target; this prevents random sentence words.
-      if(normalize(compact)===normalize(current)) out=compact.toUpperCase();
-    }
-  }
   return out;
 }
 
@@ -1000,10 +990,23 @@ window.addEventListener("load",function(){ show("home"); });
   let rec=null,running=false;
   function target(){return String(current||'').toUpperCase().replace(/[^A-Z]/g,'');}
   function normText(s){return String(s||'').toLowerCase().replace(/[.,!?;:]/g,' ').replace(/\s+/g,' ').trim();}
-  function decode(s){s=normText(s);if(!s)return[];let toks=s.split(' '),out=[];for(let i=0;i<toks.length;i++){let two=toks.slice(i,i+2).join(' ');if(aliases[two]){out.push(aliases[two]);i++;continue}let t=toks[i];if(aliases[t])out.push(aliases[t]);else if(t.length===1&&/[a-z]/.test(t))out.push(t.toUpperCase());else if(/^[a-z]{2,30}$/.test(t)&&t.toUpperCase()===target())out.push(...t.toUpperCase())}return out;}
+  function decode(s){s=normText(s);if(!s)return[];let toks=s.split(' '),out=[];for(let i=0;i<toks.length;i++){let two=toks.slice(i,i+2).join(' ');if(aliases[two]){out.push(aliases[two]);i++;continue}let t=toks[i];if(aliases[t])out.push(aliases[t]);else if(t.length===1&&/[a-z]/.test(t))out.push(t.toUpperCase());}return out;}
   function distance(a,b){let m=a.length,n=b.length,d=Array.from({length:m+1},()=>Array(n+1).fill(0));for(let i=0;i<=m;i++)d[i][0]=i;for(let j=0;j<=n;j++)d[0][j]=j;for(let i=1;i<=m;i++)for(let j=1;j<=n;j++)d[i][j]=Math.min(d[i-1][j]+1,d[i][j-1]+1,d[i-1][j-1]+(a[i-1]===b[j-1]?0:1));return d[m][n];}
   function choose(alts){let t=target(),best=null;alts.forEach((text,idx)=>{let l=decode(text),str=l.join('');if(!l.length)return;let score=distance(str,t)*10+Math.abs(str.length-t.length)*3+idx*.1;if(!best||score<best.score)best={letters:l,text,score};});return best;}
   window.stopVoiceRecognition=function(){try{if(rec)rec.abort();}catch(e){}rec=null;running=false;};
+  window.clearVoiceSpelling=function(){
+    try{if(rec)rec.abort();}catch(e){}
+    rec=null;running=false;
+    try{if(typeof voiceRecognition!=="undefined"&&voiceRecognition)voiceRecognition.abort();}catch(e){}
+    try{voiceRecognition=null;}catch(e){}
+    try{voiceLetterBuffer="";}catch(e){}
+    const heard=document.getElementById('heardLetters');
+    const st=document.getElementById('voiceStatus');
+    const btn=document.getElementById('micBtn');
+    if(heard)heard.textContent='';
+    if(st)st.textContent='Cleared. Press START SPELLING and spell the whole word again. No wrong attempt counted.';
+    if(btn){btn.disabled=false;btn.textContent='🎤 START SPELLING';}
+  };
   window.startVoiceSpelling=function(){
     if(practiceMode!=='VOICE'||correctionMode)return;
     const st=document.getElementById('voiceStatus'),btn=document.getElementById('micBtn'),heard=document.getElementById('heardLetters');
@@ -1012,7 +1015,7 @@ window.addEventListener("load",function(){ show("home"); });
     try{if(rec)rec.abort();}catch(e){}
     heard.textContent='';
     rec=new SR();rec.lang='en-GB';rec.continuous=true;rec.interimResults=true;rec.maxAlternatives=10;running=true;
-    btn.disabled=true;btn.textContent='🔴 LISTENING…';st.textContent='Listening… spell '+target().split('').join(' – ');
+    btn.disabled=true;btn.textContent='🔴 LISTENING…';st.textContent='🎤 Listening… Spell the word aloud, one letter at a time.';
     let handled=false;
     rec.onresult=function(e){
       for(let i=e.resultIndex;i<e.results.length;i++){
