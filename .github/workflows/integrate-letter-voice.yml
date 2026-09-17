@@ -11,44 +11,22 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Patch index
+      - name: Add visible Clear button
         shell: bash
         run: |
           python3 - <<'PY'
           from pathlib import Path
-          p = Path("index.html")
-          s = p.read_text(encoding="utf-8")
-          leak = "st.textContent='Listening… spell '+target().split('').join(' – ');"
-          safe = "st.textContent='Listening… Spell the word aloud, one letter at a time.';"
-          s = s.replace(leak, safe)
-          shortcut = "else if(/^[a-z]{2,30}$/.test(t)&&t.toUpperCase()===target())out.push(...t.toUpperCase())"
-          s = s.replace(shortcut, "")
-          needle = "<button type=\"button\" id=\"micBtn\" class=\"primary\" onclick=\"startVoiceSpelling()\" style=\"font-size:18px;padding:14px 24px\">🎤 START SPELLING</button>"
-          repl = needle + "\n  <button type=\"button\" id=\"voiceClearBtn\" class=\"secondary\" onclick=\"clearVoiceSpelling()\" style=\"font-size:18px;padding:14px 24px;margin-left:8px\">CLEAR</button>"
-          if "id=\"voiceClearBtn\"" not in s:
-              if needle not in s:
-                  raise SystemExit("mic button not found")
-              s = s.replace(needle, repl, 1)
-          anchor = "function submitVoiceLetterBuffer(){"
-          fn = """function clearVoiceSpelling(){
-  try{if(typeof rec!=='undefined'&&rec)rec.abort();}catch(e){}
-  try{if(typeof voiceRecognition!=='undefined'&&voiceRecognition)voiceRecognition.abort();}catch(e){}
-  try{voiceRecognition=null;}catch(e){}
-  try{voiceLetterBuffer='';}catch(e){}
-  var heard=document.getElementById('heardLetters');
-  if(heard)heard.textContent='';
-  var status=document.getElementById('voiceStatus');
-  if(status)status.textContent='Cleared. Press START SPELLING and spell the whole word again.';
-  var btn=document.getElementById('micBtn');
-  if(btn){btn.disabled=false;btn.textContent='🎤 START SPELLING';}
-}
-
-"""
-          if "function clearVoiceSpelling(){" not in s:
-              if anchor not in s:
-                  raise SystemExit("function anchor not found")
-              s = s.replace(anchor, fn + anchor, 1)
-          p.write_text(s, encoding="utf-8")
+          p=Path('index.html')
+          s=p.read_text(encoding='utf-8')
+          needle='<button type="button" id="micBtn" class="primary" onclick="startVoiceSpelling()" style="font-size:18px;padding:14px 24px">🎤 START SPELLING</button>'
+          button='<button type="button" id="voiceClearMainBtn" class="secondary" onclick="clearVoiceSpelling()" style="font-size:18px;padding:14px 24px;margin-left:8px">🧽 CLEAR</button>'
+          if 'id="voiceClearMainBtn"' not in s:
+              if needle not in s: raise SystemExit('mic button not found')
+              s=s.replace(needle,needle+'\n  '+button,1)
+          p.write_text(s,encoding='utf-8')
+          assert 'id="voiceClearMainBtn"' in s
+          assert "st.textContent='Listening… spell '+target().split('').join(' – ');" not in s
+          assert "t.toUpperCase()===target())out.push(...t.toUpperCase())" not in s
           PY
       - name: Commit patch
         shell: bash
@@ -56,5 +34,5 @@ jobs:
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add index.html
-          git diff --cached --quiet || git commit -m 'Restore Clear button and hide Voice answer letters'
+          git diff --cached --quiet || git commit -m 'Show Clear button in formal Voice spelling'
           git push
