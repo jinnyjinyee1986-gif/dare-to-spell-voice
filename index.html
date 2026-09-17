@@ -466,7 +466,7 @@ async function startVoiceSpelling(){
   function choose(alts){let best=null;alts.forEach((text,idx)=>{let l=decode(text),str=l.join('');if(!l.length)return;let score=distance(str,target)*10+Math.abs(str.length-target.length)*3+idx*.1;if(!best||score<best.score)best={letters:l,text,score};});return best;}
   heard.textContent="";
   let r=new SR();voiceRecognition=r;r.lang="en-GB";r.continuous=true;r.interimResults=true;r.maxAlternatives=10;
-  let handled=false;btn.disabled=true;btn.textContent="🔴 LISTENING…";status.textContent="🎤 Listening… spell "+target.split('').join(' – ');
+  let handled=false;btn.disabled=true;btn.textContent="🔴 LISTENING…";status.textContent="🎤 Listening… Spell the word aloud, one letter at a time.";
   r.onresult=function(e){for(let i=e.resultIndex;i<e.results.length;i++){let rr=e.results[i],alts=[];for(let j=0;j<rr.length;j++)alts.push(rr[j].transcript);let best=choose(alts);if(!best)continue;let letters=best.letters,str=letters.join('');heard.textContent=letters.join(' ');if(str===target){status.textContent="I HEARD: "+letters.join(' ');if(!handled){handled=true;try{r.stop();}catch(x){}setTimeout(()=>checkVoiceAnswer(str),180);}return;}if(str.length<target.length){status.textContent="I only heard: "+letters.join(' ')+". Keep spelling or try the whole word again. No wrong attempt counted.";}else if(rr.isFinal){status.textContent="I HEARD: "+letters.join(' ');if(!handled){handled=true;try{r.stop();}catch(x){}setTimeout(()=>checkVoiceAnswer(str),180);}return;}}};
   r.onerror=function(e){if(e.error==='no-speech')status.textContent="No clear spelling was heard. Please try again. No wrong attempt counted.";else if(e.error==='not-allowed'||e.error==='service-not-allowed')status.textContent="Microphone permission was denied.";else status.textContent="Voice recognition could not finish. Please try again. No wrong attempt counted.";};
   r.onend=function(){voiceRecognition=null;btn.disabled=false;btn.textContent="🎤 START SPELLING";};
@@ -888,6 +888,30 @@ function ensureVoiceCollectorControls(){
   var pad=document.createElement("div"); pad.style.cssText="display:grid;grid-template-columns:repeat(7,minmax(38px,1fr));gap:7px";
   "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("").forEach(function(ch){var b=document.createElement("button");b.type="button";b.textContent=ch;b.style.cssText="padding:10px 4px;border:1px solid #d7dee9;border-radius:10px;background:#f8fafc;font-weight:900;font-size:16px;cursor:pointer";b.onclick=function(){addVoicePadLetter(ch);};pad.appendChild(b);});
   box.appendChild(pad); btn.parentNode.insertBefore(box,btn.nextSibling);
+
+  // DTS_VOICE_CLEAR_BUTTON_V1
+  var mic=document.getElementById("micBtn");
+  if(mic && !document.getElementById("voiceClearBtn")){
+    var clearBtn=document.createElement("button");
+    clearBtn.id="voiceClearBtn";
+    clearBtn.type="button";
+    clearBtn.className="secondary";
+    clearBtn.textContent="CLEAR";
+    clearBtn.style.marginLeft="10px";
+    clearBtn.onclick=function(){
+      try{if(voiceRecognition)voiceRecognition.abort();}catch(e){}
+      voiceRecognition=null;
+      voiceLetterBuffer="";
+      try{renderVoiceBuffer();}catch(e){}
+      var heard=document.getElementById("heardLetters");
+      if(heard)heard.textContent="";
+      var status=document.getElementById("voiceStatus");
+      if(status)status.textContent="Cleared. Press START SPELLING and spell the whole word again.";
+      var mb=document.getElementById("micBtn");
+      if(mb){mb.disabled=false;mb.textContent="🎤 START SPELLING";}
+    };
+    mic.insertAdjacentElement("afterend",clearBtn);
+  }
 }
 
 function submitVoiceLetterBuffer(){
