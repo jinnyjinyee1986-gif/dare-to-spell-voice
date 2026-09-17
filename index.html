@@ -262,7 +262,12 @@ async function loginStudent(){
     btn.disabled=false;
     if(res&&res.ok){
       student=res.name; studentId=res.loginId;
-      try{sessionStorage.setItem("dts_sid",studentId);sessionStorage.setItem("dts_name",student);}catch(e){}
+      try{
+  sessionStorage.setItem("dts_sid",studentId);
+  sessionStorage.setItem("dts_name",student);
+  localStorage.setItem("dts_sid",studentId);
+  localStorage.setItem("dts_name",student);
+}catch(e){}
       document.getElementById("welcomeName").textContent="Welcome, "+student;
       document.getElementById("loginPassword").value=""; fb.textContent=""; show("modeScreen");
     }else{fb.textContent=(res&&res.message)||"Invalid Login ID or Password.";fb.className="feedback bad";}
@@ -275,12 +280,36 @@ async function loginStudent(){
 }
 function logoutStudent(){
   student="";studentId="";level="";letter="";practiceMode="TYPING";
-  try{sessionStorage.removeItem("dts_sid");sessionStorage.removeItem("dts_name");}catch(e){}
+  try{
+  sessionStorage.removeItem("dts_sid");sessionStorage.removeItem("dts_name");
+  localStorage.removeItem("dts_sid");localStorage.removeItem("dts_name");
+}catch(e){}
   document.getElementById("loginId").value="";document.getElementById("loginPassword").value="";document.getElementById("loginFeedback").textContent="";show("home");
 }
-function chooseMode(m){ practiceMode=(m==="VOICE"?"VOICE":"TYPING"); show("levelScreen"); }
+function restoreStudentSession(){
+  if(student && studentId) return true;
+  try{
+    studentId=sessionStorage.getItem("dts_sid")||localStorage.getItem("dts_sid")||"";
+    student=sessionStorage.getItem("dts_name")||localStorage.getItem("dts_name")||"";
+  }catch(e){}
+  if(student && studentId){
+    try{
+      sessionStorage.setItem("dts_sid",studentId);
+      sessionStorage.setItem("dts_name",student);
+    }catch(e){}
+    var wn=document.getElementById("welcomeName");
+    if(wn) wn.textContent="Welcome, "+student;
+    return true;
+  }
+  return false;
+}
+function chooseMode(m){
+  if(!restoreStudentSession()){ show("home"); return; }
+  practiceMode=(m==="VOICE"?"VOICE":"TYPING");
+  show("levelScreen");
+}
 function chooseLevel(l){
-  if(!student){show("home");return;}
+  if(!restoreStudentSession()){show("home");return;}
   level=l; document.getElementById("levelTitle").textContent=l+" Level • A–Z";
   renderLetters(); show("lettersScreen");
 }
@@ -1034,6 +1063,17 @@ window.addEventListener("load",function(){ show("home"); });
     try{rec.start();}catch(e){running=false;btn.disabled=false;btn.textContent='🎤 START SPELLING';st.textContent='Could not start microphone: '+e.message;}
   };
 })();
+
+// Restore a successful login after a browser refresh / microphone permission transition.
+window.addEventListener("pageshow",function(){
+  if(restoreStudentSession()){
+    var home=document.getElementById("home");
+    var mode=document.getElementById("modeScreen");
+    if(home && !home.classList.contains("hidden") && mode){
+      show("modeScreen");
+    }
+  }
+});
 </script>
 
 </body>
