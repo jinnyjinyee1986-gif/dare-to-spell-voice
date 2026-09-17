@@ -11,41 +11,55 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Remove Voice answer leak
+      - name: Fix Voice prompt and Clear button
         run: |
           python3 <<'PY'
           from pathlib import Path
           p=Path('index.html')
           s=p.read_text(encoding='utf-8')
 
-          # Never show target letters while the microphone is listening.
+          # Hide target letters while listening.
           s=s.replace("st.textContent='Listening… spell '+target().split('').join(' – ');",
                       "st.textContent='🎤 Listening… Spell the word aloud, one letter at a time.';")
 
-          # Never convert the pronunciation of the whole target word into letters.
+          # Never turn a spoken whole word into its spelling.
           s=s.replace("else if(/^[a-z]{2,30}$/.test(t)&&t.toUpperCase()===target())out.push(...t.toUpperCase())","")
 
-          # Same protection in the older parser/fallback path.
-          old='''  // If recognizer actually returned a compact letter sequence, accept it only
-  // when every character is alphabetic and length is plausible.
-  if(!out){
-    var compact=raw.replace(/[^a-z]/g,"");
-    if(compact.length>1 && compact.length<=24 && /^[a-z]+$/.test(compact)){
-      // Do not treat ordinary recognized words as spelling unless it exactly
-      // matches the current target; this prevents random sentence words.
-      if(normalize(compact)===normalize(current)) out=compact.toUpperCase();
+          # Install a permanent CLEAR button beside the microphone button.
+          marker="    heard.textContent='';\n    rec=new SR();"
+          replacement="""    heard.textContent='';
+    let clearBtn=document.getElementById('voiceClearBtn');
+    if(!clearBtn){
+      clearBtn=document.createElement('button');
+      clearBtn.id='voiceClearBtn';
+      clearBtn.type='button';
+      clearBtn.className='secondary';
+      clearBtn.textContent='🧽 CLEAR';
+      clearBtn.style.marginLeft='10px';
+      btn.insertAdjacentElement('afterend',clearBtn);
     }
-  }
-'''
-          if old in s:
-              s=s.replace(old,'')
+    clearBtn.style.display='inline-block';
+    clearBtn.onclick=function(){
+      try{if(rec)rec.abort();}catch(e){}
+      rec=null;running=false;
+      try{if(typeof voiceRecognition!=='undefined'&&voiceRecognition)voiceRecognition.abort();}catch(e){}
+      try{voiceRecognition=null;}catch(e){}
+      try{voiceLetterBuffer='';}catch(e){}
+      heard.textContent='';
+      st.textContent='Cleared. Press START SPELLING and spell the whole word again.';
+      btn.disabled=false;
+      btn.textContent='🎤 START SPELLING';
+    };
+    rec=new SR();"""
+          if marker in s:
+              s=s.replace(marker,replacement,1)
 
           p.write_text(s,encoding='utf-8')
           PY
-      - name: Commit Voice privacy fix
+      - name: Commit Voice UI fix
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add index.html
-          git diff --cached --quiet || git commit -m "Remove Voice answer hint and whole-word shortcut"
+          git diff --cached --quiet || git commit -m "Hide Voice answer hint and restore Clear button"
           git push
